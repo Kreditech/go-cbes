@@ -3,24 +3,43 @@ package cbes
 import (
     _ "go-cbes/es"
     "gopkg.in/olivere/elastic.v2"
-    "go-cbes/es"
+//    "go-cbes/es"
+    "os"
+    "go-cbes/connection"
 )
 
-type esSettings struct {
-    name              string
-    numberOfShards    int
-    numberOfReplicas  int
+var (
+    DebugLog = NewLog(os.Stderr)
+)
+
+// cbes configuration
+type Setting struct {
+    ElasticSearch struct {
+        Urls              string
+        Bucket            string
+        NumberOfShards    int
+        NumberOfReplicas  int
+    }
+    CouchBase string
 }
 
-type cbesSetting struct {
-    esSettings esSettings
-}
-
+// connections
 type cbesConnection struct {
     es elastic.Client
 }
 
-func (cbesConn *cbesConnection) Client(esOptions ...string) {
-    cbesConn.es = es.Connect(esOptions)
+func RegisterDataBase (aliasName string, settings Setting) {
+    conn, err := connection.Open(aliasName, settings)
+
+    if err != nil {
+
+    }
 }
+
+func Client (settings Setting) (Setting) {
+    return settings
+//    cbesConn.es = es.Connect(esOptions)
+}
+
+
 

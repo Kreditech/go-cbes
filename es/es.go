@@ -2,20 +2,27 @@ package es
 
 import (
     "gopkg.in/olivere/elastic.v2"
-    "fmt"
+    "go-cbes"
 )
 
 // connect to elastic search
-func Connect (urls ...string) (elastic.Client) {
-    client, err := elastic.NewClient(elastic.SetURL(urls))
+func connect (settings *cbes.Setting) (elastic.Client, error) {
+    client, err := elastic.NewClient(elastic.SetURL(settings.ElasticSearch.Urls))
 
     if err != nil  {
-        fmt.Errorf(err)
+        return nil, err
     }
 
-    return client
+    return client, nil
 }
-//
-//func CheckIndex (name string, nr) {
-//
-//}
+
+// Open connection
+func Open (setting *cbes.Setting) (elastic.Client, error) {
+    client, err := connect(setting)
+
+    if err != nil {
+        return nil, err
+    }
+
+    return client, nil
+}
