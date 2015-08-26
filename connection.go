@@ -4,9 +4,6 @@ import (
     "gopkg.in/olivere/elastic.v2"
     "gopkg.in/couchbaselabs/gocb.v0"
 
-    "go-cbes/es"
-    "go-cbes/cb"
-
     "sync"
     "fmt"
 )
@@ -59,13 +56,13 @@ func Open(aliasName string, settings *Setting) error {
         db *DB
     )
 
-    db.cb, err = cb.Open(settings)
+    db.cb, err = OpenCb(settings)
     if err != nil {
         err = fmt.Errorf("register cb `%s`, %s", aliasName, err.Error())
         goto end
     }
 
-    db.es, err = es.Open(settings)
+    db.es, err = OpenEs(settings)
     if err != nil {
         err = fmt.Errorf("register es `%s`, %s", aliasName, err.Error())
         goto end

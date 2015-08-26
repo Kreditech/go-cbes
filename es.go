@@ -1,12 +1,11 @@
-package es
+package cbes
 
 import (
     "gopkg.in/olivere/elastic.v2"
-    "go-cbes"
 )
 
 // connect to elastic search
-func connect (settings *cbes.Setting) (elastic.Client, error) {
+func connect (settings *Setting) (elastic.Client, error) {
     client, err := elastic.NewClient(elastic.SetURL(settings.ElasticSearch.Urls))
 
     if err != nil  {
@@ -17,7 +16,7 @@ func connect (settings *cbes.Setting) (elastic.Client, error) {
 }
 
 // Open connection
-func Open (setting *cbes.Setting) (elastic.Client, error) {
+func OpenEs (setting *Setting) (elastic.Client, error) {
     client, err := connect(setting)
 
     if err != nil {

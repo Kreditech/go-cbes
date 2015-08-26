@@ -1,8 +1,7 @@
-package cb
+package cbes
 
 import (
     "gopkg.in/couchbaselabs/gocb.v0"
-    "go-cbes"
     "time"
 )
 
@@ -13,7 +12,7 @@ type Bucket struct {
 }
 
 
-func Open(setting *cbes.Setting) (gocb.Cluster, error){
+func OpenCb(setting *Setting) (gocb.Cluster, error){
     cluster, err := gocb.Connect(setting.CouchBase.Host + ":" + setting.CouchBase.Port)
 
     if err != nil {

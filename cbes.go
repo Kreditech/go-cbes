@@ -1,11 +1,8 @@
 package cbes
 
 import (
-    _ "go-cbes/es"
     "gopkg.in/olivere/elastic.v2"
-//    "go-cbes/es"
     "os"
-    "go-cbes/connection"
 )
 
 var (
