@@ -15,12 +15,15 @@ var (
 // cbes configuration
 type Setting struct {
     ElasticSearch struct {
-        Urls              string
-        Bucket            string
-        NumberOfShards    int
-        NumberOfReplicas  int
-    }
-    CouchBase string
+                      Urls             string
+                      Bucket           string
+                      NumberOfShards   int
+                      NumberOfReplicas int
+                  }
+    CouchBase     struct {
+                      Host             string
+                      Port             int
+                  }
 }
 
 // connections
@@ -28,17 +31,17 @@ type cbesConnection struct {
     es elastic.Client
 }
 
-func RegisterDataBase (aliasName string, settings Setting) {
-    conn, err := connection.Open(aliasName, settings)
+func RegisterDataBase(aliasName string, settings Setting) {
+    err := Open(aliasName, settings)
 
     if err != nil {
 
     }
 }
 
-func Client (settings Setting) (Setting) {
+func Client(settings Setting) (Setting) {
     return settings
-//    cbesConn.es = es.Connect(esOptions)
+    //    cbesConn.es = es.Connect(esOptions)
 }
 
 

@@ -1,16 +1,19 @@
-package connection
+package cbes
 
 import (
     "gopkg.in/olivere/elastic.v2"
-    "go-cbes"
-    "sync"
+    "gopkg.in/couchbaselabs/gocb.v0"
+
     "go-cbes/es"
+    "go-cbes/cb"
+
+    "sync"
     "fmt"
 )
 
 type DB struct {
     es elastic.Client
-    cb string
+    cb gocb.Cluster
 }
 
 type alias struct {
@@ -50,11 +53,17 @@ func addAlias(aliasName string, db *DB) (*alias, error) {
 }
 
 // Opens an DB specified by its aliasName
-func Open (aliasName string, settings *cbes.Setting) error {
+func Open(aliasName string, settings *Setting) error {
     var (
         err error
         db *DB
     )
+
+    db.cb, err = cb.Open(settings)
+    if err != nil {
+        err = fmt.Errorf("register cb `%s`, %s", aliasName, err.Error())
+        goto end
+    }
 
     db.es, err = es.Open(settings)
     if err != nil {
