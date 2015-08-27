@@ -8,6 +8,8 @@ import (
     "fmt"
 )
 
+var dbCache = &dataBaseCache{cache: make(map[string]*alias)}
+
 type DB struct {
     es elastic.Client
     cb gocb.Cluster
@@ -42,7 +44,7 @@ func addAlias(aliasName string, db *DB) (*alias, error) {
     al.Name = aliasName
     al.Connection = db
 
-    if dataBaseCache.add(aliasName, al) == false {
+    if dbCache.add(aliasName, al) == false {
         return nil, fmt.Errorf("DataBase alias name `%s` already registered, cannot reuse", aliasName)
     }
 
@@ -53,27 +55,27 @@ func addAlias(aliasName string, db *DB) (*alias, error) {
 func Open(aliasName string, settings *Setting) error {
     var (
         err error
-        db *DB
+//        db *DB
     )
 
-    db.cb, err = OpenCb(settings)
-    if err != nil {
-        err = fmt.Errorf("register cb `%s`, %s", aliasName, err.Error())
-        goto end
-    }
+//    db.cb, err = OpenCb(settings)
+//    if err != nil {
+//        err = fmt.Errorf("register cb `%s`, %s", aliasName, err.Error())
+//        goto end
+//    }
 
-    db.es, err = OpenEs(settings)
-    if err != nil {
-        err = fmt.Errorf("register es `%s`, %s", aliasName, err.Error())
-        goto end
-    }
+//    db.es, err = OpenEs(settings)
+//    if err != nil {
+//        err = fmt.Errorf("register es `%s`, %s", aliasName, err.Error())
+//        goto end
+//    }
+//
+//    _, err = addAlias(aliasName, db)
+//    if err != nil {
+//        goto end
+//    }
 
-    _, err = addAlias(aliasName, db)
-    if err != nil {
-        goto end
-    }
-
-end:
+//end:
     return err
 }
 

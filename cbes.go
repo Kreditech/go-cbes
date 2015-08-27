@@ -28,7 +28,7 @@ type cbesConnection struct {
     es elastic.Client
 }
 
-func RegisterDataBase(aliasName string, settings Setting) {
+func RegisterDataBase(aliasName string, settings *Setting) {
     err := Open(aliasName, settings)
 
     if err != nil {

@@ -5,7 +5,7 @@ import (
 )
 
 // connect to elastic search
-func connect (settings *Setting) (elastic.Client, error) {
+func connect (settings *Setting) (*elastic.Client, error) {
     client, err := elastic.NewClient(elastic.SetURL(settings.ElasticSearch.Urls))
 
     if err != nil  {
@@ -16,7 +16,7 @@ func connect (settings *Setting) (elastic.Client, error) {
 }
 
 // Open connection
-func OpenEs (setting *Setting) (elastic.Client, error) {
+func OpenEs (setting *Setting) (*elastic.Client, error) {
     client, err := connect(setting)
 
     if err != nil {
