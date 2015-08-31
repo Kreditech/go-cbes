@@ -2,18 +2,13 @@ package cbes
 
 import (
     "gopkg.in/olivere/elastic.v2"
-    "os"
-)
-
-var (
-    DebugLog = NewLog(os.Stderr)
 )
 
 // cbes configuration
-type Setting struct {
+type Settings struct {
     ElasticSearch struct {
-                      Urls             string
-                      Bucket           string
+                      Urls             []string
+                      Index            string
                       NumberOfShards   int
                       NumberOfReplicas int
                   }
@@ -28,15 +23,15 @@ type cbesConnection struct {
     es elastic.Client
 }
 
-func RegisterDataBase(aliasName string, settings *Setting) {
+func RegisterDataBase(aliasName string, settings *Settings) {
     err := Open(aliasName, settings)
 
     if err != nil {
-
+        ColorLog("[ERRO] CBES: %s\n", err)
     }
 }
 
-func Client(settings Setting) (Setting) {
+func Client(settings Settings) (Settings) {
     return settings
     //    cbesConn.es = es.Connect(esOptions)
 }

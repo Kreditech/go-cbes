@@ -13,8 +13,8 @@ type Bucket struct {
 }
 
 
-func OpenCb(setting *Setting) (*gocb.Cluster, error){
-    cluster, err := gocb.Connect(setting.CouchBase.Host + ":" + strconv.Itoa(setting.CouchBase.Port))
+func OpenCb(settings *Settings) (*gocb.Cluster, error){
+    cluster, err := gocb.Connect(settings.CouchBase.Host + ":" + strconv.Itoa(settings.CouchBase.Port))
 
     if err != nil {
         return nil, err
