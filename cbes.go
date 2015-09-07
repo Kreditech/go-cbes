@@ -2,6 +2,7 @@ package cbes
 
 import (
     "gopkg.in/olivere/elastic.v2"
+    "fmt"
 )
 
 // cbes configuration
@@ -23,6 +24,7 @@ type cbesConnection struct {
     es elastic.Client
 }
 
+// Register DataBase connection
 func RegisterDataBase(aliasName string, settings *Settings) {
     err := Open(aliasName, settings)
 
@@ -31,9 +33,11 @@ func RegisterDataBase(aliasName string, settings *Settings) {
     }
 }
 
-func Client(settings Settings) (Settings) {
-    return settings
-    //    cbesConn.es = es.Connect(esOptions)
+// Register a model or array of models
+func RegisterModel(models ...interface{}) {
+    for _, model := range models {
+        fmt.Println(model)
+    }
 }
 
 

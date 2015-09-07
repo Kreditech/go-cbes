@@ -2,10 +2,10 @@ package cbes
 
 import (
     "gopkg.in/olivere/elastic.v2"
-    "fmt"
+//    "fmt"
 )
 
-// connect to elastic search and build the client
+// Connect to elastic search and build the client
 func connect (settings *Settings) (*elastic.Client, error) {
     client, err := elastic.NewClient(elastic.SetURL(settings.ElasticSearch.Urls...))
     if err != nil {
@@ -15,7 +15,7 @@ func connect (settings *Settings) (*elastic.Client, error) {
     return client, nil
 }
 
-// check if the index exists
+// Check if the index exists
 func checkIndex(settings *Settings, client *elastic.Client) (bool, error) {
     exists, err := client.IndexExists(settings.ElasticSearch.Index).Do()
     if err != nil {
@@ -29,14 +29,14 @@ func checkIndex(settings *Settings, client *elastic.Client) (bool, error) {
     return true, nil
 }
 
-// create
+// Create Index
 func createIndex(settings *Settings, client *elastic.Client) (bool, error) {
-    builder := client.CreateIndex(settings.ElasticSearch.Index)
-    fmt.Println("==========================")
-    fmt.Println(builder)
-    fmt.Println("==========================")
+    builder, err := client.CreateIndex(settings.ElasticSearch.Index).Do()
+    if err != nil {
+        return false, err
+    }
 
-    return true, nil
+    return builder.Acknowledged, nil
 }
 
 // Open connection

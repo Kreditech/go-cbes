@@ -67,12 +67,10 @@ func Open(aliasName string, settings *Settings) error {
         goto end
     }
 
-    fmt.Print(db)
-
-//    _, err = addAlias(aliasName, db)
-//    if err != nil {
-//        goto end
-//    }
+    _, err = addAlias(aliasName, db)
+    if err != nil {
+        goto end
+    }
 
 end:
     return err
