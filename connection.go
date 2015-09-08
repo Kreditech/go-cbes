@@ -37,6 +37,16 @@ func (ch *dataBaseCache) add(name string, connection *alias) (added bool) {
     return
 }
 
+// get database alias if cached.
+func (ch *dataBaseCache) get(name string) (al *alias, ok bool) {
+    ch.mux.RLock()
+    defer ch.mux.RUnlock()
+
+    al, ok = ch.cache[name]
+    return
+}
+
+// add database alias with original name.
 func addAlias(aliasName string, db *DB) (*alias, error) {
     al := new(alias)
 
