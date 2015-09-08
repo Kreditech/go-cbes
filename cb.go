@@ -2,8 +2,7 @@ package cbes
 
 import (
     "gopkg.in/couchbaselabs/gocb.v0"
-//    "time"
-    "strconv"
+    "time"
 )
 
 type Bucket struct {
@@ -12,9 +11,8 @@ type Bucket struct {
     OperationTimeout int //seconds
 }
 
-
-func OpenCb(settings *Settings) (*gocb.Cluster, error){
-    cluster, err := gocb.Connect(settings.CouchBase.Host + ":" + strconv.Itoa(settings.CouchBase.Port))
+func connectCb(settings *Settings) (*gocb.Cluster, error) {
+    cluster, err := gocb.Connect(settings.CouchBase.Host)
 
     if err != nil {
         return nil, err
@@ -23,13 +21,27 @@ func OpenCb(settings *Settings) (*gocb.Cluster, error){
     return cluster, err;
 }
 
-//func RegisteBucket (bucket *Bucket) (gocb.Bucket, error) {
-//    cluster := gocb.Cluster
-//    b, err := cluster.OpenBucket(bucket.Name, bucket.Pass)
-//    b.SetOperationTimeout(time.Duration(bucket.OperationTimeout)* time.Second)
-//
-//    if err != nil {
-//        return nil, err
-//    }
-//     return b, err
-//}
+func openBucket (bucket *Bucket, cluster *gocb.Cluster) (*gocb.Bucket, error) {
+    b, err := cluster.OpenBucket(bucket.Name, bucket.Pass)
+    b.SetOperationTimeout(time.Duration(bucket.OperationTimeout)* time.Second)
+
+    if err != nil {
+        return nil, err
+    }
+
+    return b, err
+}
+
+func OpenCb(settings *Settings) (*gocb.Bucket, error) {
+    cluster, err := connectCb(settings)
+    if err != nil {
+        return nil, err
+    }
+
+    bucket, err := openBucket(settings.CouchBase.Bucket, cluster)
+    if err != nil {
+        return nil, err
+    }
+
+    return bucket, nil
+}
