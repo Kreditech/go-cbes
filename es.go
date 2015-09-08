@@ -5,8 +5,8 @@ import (
 //    "fmt"
 )
 
-// Connect to elastic search and build the client
-func connect (settings *Settings) (*elastic.Client, error) {
+// connect to elastic search and build the client
+func connectEs (settings *Settings) (*elastic.Client, error) {
     client, err := elastic.NewClient(elastic.SetURL(settings.ElasticSearch.Urls...))
     if err != nil {
         return nil , err
@@ -41,7 +41,7 @@ func createIndex(settings *Settings, client *elastic.Client) (bool, error) {
 
 // Open connection
 func OpenEs (settings *Settings) (*elastic.Client, error) {
-    client, err := connect(settings)
+    client, err := connectEs(settings)
     if err != nil {
         return nil, err
     }

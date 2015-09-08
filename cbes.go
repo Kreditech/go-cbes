@@ -14,8 +14,8 @@ type Settings struct {
                       NumberOfReplicas int
                   }
     CouchBase     struct {
-                      Host             string
-                      Port             int
+                      Host   string
+                      Bucket *Bucket
                   }
 }
 
@@ -27,6 +27,7 @@ type cbesConnection struct {
 // Register DataBase connection
 func RegisterDataBase(aliasName string, settings *Settings) {
     err := Open(aliasName, settings)
+
 
     if err != nil {
         ColorLog("[ERRO] CBES: %s\n", err)

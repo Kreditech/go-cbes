@@ -2,16 +2,16 @@ package cbes
 
 import (
     "gopkg.in/couchbaselabs/gocb.v0"
+    "gopkg.in/olivere/elastic.v2"
     "sync"
     "fmt"
-    "gopkg.in/olivere/elastic.v2"
 )
 
 var dbCache = &dataBaseCache{cache: make(map[string]*alias)}
 
 type DB struct {
     es *elastic.Client
-    cb gocb.Cluster
+    cb *gocb.Bucket
 }
 
 type alias struct {
@@ -65,15 +65,17 @@ func Open(aliasName string, settings *Settings) error {
     var err error
     db := new(DB)
 
-//    db.cb, err = OpenCb(settings)
-//    if err != nil {
-//        err = fmt.Errorf("register cb `%s`, %s", aliasName, err.Error())
-//        goto end
-//    }
-
     db.es, err = OpenEs(settings)
     if err != nil {
         err = fmt.Errorf("register es `%s`, %s", aliasName, err.Error())
+        goto end
+    }
+
+    fmt.Print(db)
+
+    db.cb, err = OpenCb(settings)
+    if err != nil {
+        err = fmt.Errorf("register cb `%s`, %s", aliasName, err.Error())
         goto end
     }
 
