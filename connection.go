@@ -67,15 +67,13 @@ func Open(aliasName string, settings *Settings) error {
 
     db.es, err = OpenEs(settings)
     if err != nil {
-        err = fmt.Errorf("register es `%s`, %s", aliasName, err.Error())
+        err = fmt.Errorf("register ElasticSearch `%s`, %s", aliasName, err.Error())
         goto end
     }
 
-    fmt.Print(db)
-
     db.cb, err = OpenCb(settings)
     if err != nil {
-        err = fmt.Errorf("register cb `%s`, %s", aliasName, err.Error())
+        err = fmt.Errorf("register CouchBase `%s`, %s", aliasName, err.Error())
         goto end
     }
 
