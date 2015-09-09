@@ -4,8 +4,6 @@ import (
     "gopkg.in/olivere/elastic.v2"
 )
 
-var dbSettings = new(Settings)
-
 // cbes configuration
 type Settings struct {
     ElasticSearch struct {
@@ -22,6 +20,8 @@ type Settings struct {
                   }
 }
 
+var dbSettings = &Settings{}
+
 // connections
 type cbesConnection struct {
     es elastic.Client
@@ -29,13 +29,24 @@ type cbesConnection struct {
 
 // Register DataBase connection
 func RegisterDataBase(settings *Settings) {
-    err := Open(settings)
+    var err error
 
+    err = Open(settings)
     if err != nil {
-        ColorLog("[ERRO] CBES: %s\n", err)
+        goto printError
     }
 
     dbSettings = settings
+
+    err = importAllModels()
+    if err != nil {
+        goto printError
+    }
+
+printError:
+    if err != nil {
+        ColorLog("[ERRO] CBES: %s\n", err)
+    }
 }
 
 // Register a model or array of models
@@ -47,6 +58,3 @@ func RegisterModel(models ...interface{}) {
         }
     }
 }
-
-
-

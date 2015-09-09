@@ -43,9 +43,9 @@ func InsertDesignDocument (name string) error {
     if err != nil {
                 fmt.Println("Error: ")
                 fmt.Println(err)
-                return err
+                return nil
             }
-    fmt.Println(json1)
+    fmt.Println(string(json1))
 //    fmt.Println(aux.CouchBase.UserName)
 //    fmt.Println(aux.CouchBase.Pass)
 //    bManager := Connection.cb.Manager(dbSettings.CouchBase.UserName,dbSettings.CouchBase.Pass)
