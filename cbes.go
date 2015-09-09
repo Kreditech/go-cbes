@@ -2,7 +2,6 @@ package cbes
 
 import (
     "gopkg.in/olivere/elastic.v2"
-    "fmt"
 )
 
 // cbes configuration
@@ -27,8 +26,8 @@ type cbesConnection struct {
 }
 
 // Register DataBase connection
-func RegisterDataBase(aliasName string, settings *Settings) {
-    err := Open(aliasName, settings)
+func RegisterDataBase(settings *Settings) {
+    err := Open(settings)
 
     if err != nil {
         ColorLog("[ERRO] CBES: %s\n", err)
@@ -38,7 +37,10 @@ func RegisterDataBase(aliasName string, settings *Settings) {
 // Register a model or array of models
 func RegisterModel(models ...interface{}) {
     for _, model := range models {
-        fmt.Println(model)
+        err := registerModel(model)
+        if err != nil {
+            ColorLog("[ERRO] CBES: register mode failed %s\n", err)
+        }
     }
 }
 

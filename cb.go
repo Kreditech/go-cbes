@@ -45,3 +45,7 @@ func OpenCb(settings *Settings) (*gocb.Bucket, error) {
 
     return bucket, nil
 }
+
+func createViewCb (name string) bool {
+    return true
+}
