@@ -6,6 +6,8 @@ import (
     "fmt"
 )
 
+var Connection = new(db)
+
 type db struct {
     es *elastic.Client
     cb *gocb.Bucket
@@ -14,15 +16,14 @@ type db struct {
 // Opens DB connection
 func Open(settings *Settings) error {
     var err error
-    db := new(db)
 
-    db.es, err = OpenEs(settings)
+    Connection.es, err = OpenEs(settings)
     if err != nil {
         err = fmt.Errorf("register ElasticSearch %s", err.Error())
         goto end
     }
 
-    db.cb, err = OpenCb(settings)
+    Connection.cb, err = OpenCb(settings)
     if err != nil {
         err = fmt.Errorf("register CouchBase %s", err.Error())
         goto end

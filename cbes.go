@@ -4,6 +4,8 @@ import (
     "gopkg.in/olivere/elastic.v2"
 )
 
+var dbSettings = new(Settings)
+
 // cbes configuration
 type Settings struct {
     ElasticSearch struct {
@@ -32,6 +34,8 @@ func RegisterDataBase(settings *Settings) {
     if err != nil {
         ColorLog("[ERRO] CBES: %s\n", err)
     }
+
+    dbSettings = settings
 }
 
 // Register a model or array of models
