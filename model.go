@@ -83,7 +83,7 @@ func importAllModels() error {
         //createViewsCB(getViewName(model), getView(model))
         //fmt.Println(mapping)
 //    }
-    err := createViewCB(modelsCache.cache)
+    err := createModelViewsCB(modelsCache.cache)
     if err != nil {
         fmt.Println(err)
         return err

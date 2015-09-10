@@ -67,6 +67,10 @@ func (o *orm) Limit(limit int) *orm {
 
 // create new document in CouchBase and Elasticsearch
 func (o *orm) Create(model interface{}) error {
+    err := createCB(model)
+    if err != nil {
+        return err
+    }
     return nil
 }
 
