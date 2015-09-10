@@ -59,7 +59,7 @@ func createViewCB(models map[string]interface{}) error{
     }
 
     dDocument := gocb.DesignDocument{}
-    dDocument.Name = "udk"
+    dDocument.Name = dbSettings.CouchBase.Bucket.Name
     dDocument.Views = views
 
     err := manager.UpsertDesignDocument(&dDocument)
