@@ -4,13 +4,24 @@ import (
     "gopkg.in/couchbaselabs/gocb.v0"
     "time"
     "fmt"
-    "encoding/json"
+    "strings"
+    "reflect"
 )
 
 type Bucket struct {
     Name string
     Pass string
     OperationTimeout int //seconds
+}
+
+func getViewName (model interface{}) (string){
+    viewName := strings.ToLower(reflect.TypeOf(model).Elem().Name())
+    return viewName
+}
+
+func getView (model interface{}) (string){
+    viewName := strings.ToLower(reflect.TypeOf(model).Elem().Name())
+    return "function (doc, meta) {if(doc._TYPE && doc._TYPE == '" + viewName + "') {emit(meta.id, {doc: doc, meta: meta});}}"
 }
 
 func connectCb(settings *Settings) (*gocb.Cluster, error) {
@@ -36,37 +47,28 @@ func openBucket (settings *Settings, cluster *gocb.Cluster) (*gocb.Bucket, error
     return b, err
 }
 
-func InsertDesignDocument (name string) error {
-    aux := dbSettings
-    fmt.Println(name)
-    json1, err := json.Marshal(aux)
+func createViewCB(models map[string]interface{}) error{
+    manager := Connection.cb.Manager(dbSettings.CouchBase.UserName,dbSettings.CouchBase.Pass)
+    views := map[string]gocb.View{}
+
+    for _, model := range models {
+        newView := gocb.View{}
+        newView.Map = getView(model)
+
+        views[getViewName(model)] = newView
+    }
+
+    dDocument := gocb.DesignDocument{}
+    dDocument.Name = "udk"
+    dDocument.Views = views
+
+    err := manager.UpsertDesignDocument(&dDocument)
     if err != nil {
-                fmt.Println("Error: ")
-                fmt.Println(err)
-                return nil
-            }
-    fmt.Println(string(json1))
-//    fmt.Println(aux.CouchBase.UserName)
-//    fmt.Println(aux.CouchBase.Pass)
-//    bManager := Connection.cb.Manager(dbSettings.CouchBase.UserName,dbSettings.CouchBase.Pass)
-//
-//    fmt.Printf("% +v\n", bManager)
-//
-//    dDocuments, err := bManager.GetDesignDocuments()
-//    if err != nil {
-//        fmt.Println("Error: ")
-//        fmt.Println(err)
-//        return err
-//    }
-//
-//    for i := range dDocuments {
-//        json1, err := json.Marshal(dDocuments[i])
-//        if err != nil {
-//            fmt.Println("Error: ")
-//            fmt.Println(err)
-//        }
-//        fmt.Println(string(json1))
-//    }
+        fmt.Println("InsertDesignDocument Error: ")
+        fmt.Println(err)
+        return err
+    }
+
     return nil
 }
 

@@ -44,7 +44,7 @@ func registerModel (model interface{}) error {
 
     added := modelsCache.add(modelName, model)
     if !added {
-        return fmt.Errorf("%s model allready regiseterd", _model.Name())
+        return fmt.Errorf("%s model allready registered", _model.Name())
     }
 
     return nil
@@ -78,9 +78,15 @@ func buildModelMapping(model interface{}) string {
 
 // import all models mapping and view into CouchBase and ElasticSearch
 func importAllModels() error {
-    for _, model := range modelsCache.cache {
-        mapping := buildModelMapping(model)
-        fmt.Println(mapping)
+    //for _, model := range modelsCache.cache {
+        //mapping := buildModelMapping(model)
+        //createViewsCB(getViewName(model), getView(model))
+        //fmt.Println(mapping)
+//    }
+    err := createViewCB(modelsCache.cache)
+    if err != nil {
+        fmt.Println(err)
+        return err
     }
 
     return nil
