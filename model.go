@@ -5,7 +5,9 @@ import (
     "sync"
     "fmt"
     "strings"
+    "regexp"
     "encoding/json"
+    "strconv"
 )
 
 type _models struct  {
@@ -50,43 +52,99 @@ func registerModel (model interface{}) error {
     return nil
 }
 
+// convert model tags into objects and prepare them for ElasticSearch mapping builder
+func convertModelTags(_tags []string) interface{} {
+    data := make(map[string]interface{})
+
+    reg, err := regexp.Compile("[^-A-Za-z0-9_:]+")
+    if err != nil {
+        panic(err)
+    }
+
+    for _, val := range _tags {
+        clearString := reg.ReplaceAllString(val, "")
+        tags := strings.Split(clearString, ":")
+
+        if (tags[0] == "default") {
+            continue
+        }
+
+        if len(tags) < 2 {
+            return nil
+        }
+
+        if len(tags) == 2 {
+            i, err := strconv.ParseInt(tags[1], 10, 64)
+            if err == nil {
+                data[string(tags[0])] = i
+                continue
+            }
+
+            b, err := strconv.ParseBool(tags[1])
+            if err == nil {
+                data[string(tags[0])] = b
+                continue
+            }
+
+            data[string(tags[0])] = tags[1]
+        } else if len(tags) > 2 {
+            obj := []string{strings.Join(tags[1:], ":")}
+            data[tags[0]] = convertModelTags(obj)
+        }
+    }
+
+    return data
+}
+
+// get the view name from model interface
+func getModelName(model interface{}) (string){
+    name := strings.ToLower(reflect.TypeOf(model).Elem().Name())
+    return name
+}
+
+// build ElasticSearch mapping from model struct tags
 func buildModelMapping(model interface{}) string {
     m := reflect.ValueOf(model).Elem()
+    modelName := getModelName(model)
+
+    modelMapping := make(map[string]interface{})
+    modelMapping[modelName] = map[string]interface{}{
+        "properties": make(map[string]interface{}),
+    }
 
     for i := 0; i < m.NumField(); i++ {
         field := m.Type().Field(i).Name
-        val := m.Field(i).Interface()
-        tags := strings.Split(string(m.Type().Field(i).Tag), " ")
+        mapping := convertModelTags(strings.Split(string(m.Type().Field(i).Tag), " "))
 
-        if field == "Mapping" {
-            x, err := json.Marshal(val)
-            if err != nil {
-                fmt.Println(err)
-            } else {
-                fmt.Println(string(x))
-            }
+        if mapping != nil {
+            prop := modelMapping[modelName].(map[string]interface{})["properties"].(map[string]interface{})
+            prop[field] = mapping
         }
-
-        fmt.Println("-----------------------")
-        fmt.Println(field)
-        fmt.Println(val)
-        fmt.Println(tags)
     }
 
-    return ""
+    mappingJson, err := json.Marshal(modelMapping)
+    if err != nil {
+        fmt.Println(err)
+    }
+
+    return string(mappingJson)
 }
 
 // import all models mapping and view into CouchBase and ElasticSearch
 func importAllModels() error {
-    //for _, model := range modelsCache.cache {
-        //mapping := buildModelMapping(model)
-        //createViewsCB(getViewName(model), getView(model))
-        //fmt.Println(mapping)
-//    }
     err := createModelViewsCB(modelsCache.cache)
     if err != nil {
         fmt.Println(err)
         return err
+    }
+
+    for _, model := range modelsCache.cache {
+        modelMapping := buildModelMapping(model)
+
+        err := addMapping(modelMapping, getModelName(model))
+        if err != nil  {
+            return err
+        }
     }
 
     return nil

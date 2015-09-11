@@ -4,8 +4,6 @@ import (
     "gopkg.in/couchbaselabs/gocb.v0"
     "time"
     "fmt"
-    "strings"
-    "reflect"
     "strconv"
 )
 
@@ -55,15 +53,9 @@ func OpenCb(settings *Settings) (*gocb.Bucket, error) {
     return bucket, nil
 }
 
-// get the view name from model interface
-func getModelName(model interface{}) (string) {
-    viewName := strings.ToLower(reflect.TypeOf(model).Elem().Name())
-    return viewName
-}
-
 // get the view from the model interface
-func getView(model interface{}) (string) {
-    viewName := strings.ToLower(reflect.TypeOf(model).Elem().Name())
+func getView (model interface{}) string {
+    viewName := getModelName(model)
     return "function (doc, meta) {if(doc._TYPE && doc._TYPE == '" + viewName + "') {emit(meta.id, {doc: doc, meta: meta});}}"
 }
 

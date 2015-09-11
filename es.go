@@ -3,6 +3,7 @@ package cbes
 import (
     "gopkg.in/olivere/elastic.v2"
 //    "fmt"
+    "fmt"
 )
 
 // connect to elastic search and build the client
@@ -56,4 +57,23 @@ func OpenEs (settings *Settings) (*elastic.Client, error) {
     }
 
     return client, nil
+}
+
+// put model mapping
+func addMapping(mapping string, modelName string) error {
+    index := dbSettings.ElasticSearch.Index
+    es := *Connection.es
+
+    res, err := es.PutMapping().Index(index).Type(modelName).BodyString(mapping).Do()
+    if err != nil {
+        return err
+    }
+    if res == nil {
+        return fmt.Errorf("expected put mapping response; got: %v", res)
+    }
+    if !res.Acknowledged {
+        return fmt.Errorf("expected put mapping ack; got: %v", res.Acknowledged)
+    }
+
+    return nil
 }
