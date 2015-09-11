@@ -46,7 +46,7 @@ type orm struct {
     db *db
 }
 
-// set find query in ElasticSearch
+// Set find query in ElasticSearch
 func (o *orm) Find(model interface{}, query interface{}) *orm {
     tmpQuery["query"] = queryTemplate["query"]
 
@@ -54,7 +54,7 @@ func (o *orm) Find(model interface{}, query interface{}) *orm {
     return o
 }
 
-// set limit to Find() query in ElasticSearch
+// Set limit to Find() query in ElasticSearch
 func (o *orm) Limit(limit int) *orm {
     if len(tmpQuery) == 0 {
         panic("You must declare Find() first!")
@@ -65,11 +65,46 @@ func (o *orm) Limit(limit int) *orm {
     return o
 }
 
-// create new document in CouchBase and Elasticsearch
+// Create new document in CouchBase and Elasticsearch
 func (o *orm) Create(model interface{}) error {
     err := createCB(model)
     if err != nil {
-        return err
+        return fmt.Errorf("cbes.Create() CouchBase %s", err.Error())
+    }
+    return nil
+}
+
+// Create a splice of documents in CouchBase and ElasticSearch
+func (o *orm) CreateEach(models []interface{}) error {
+
+    err := createEachCB(models)
+    if err != nil {
+        return fmt.Errorf("cbes.CreateEach() CouchBase %s", err.Error())
+    }
+
+    return nil
+}
+
+// Destroy a document in CouchBase and ElasticSearch
+func (o *orm) Destroy(filterQuery string) error {
+    //TODO Insert Find function here and return the model id
+    var modelId = "user:4" //TODO TO DELETE
+
+    err := destroyCB(modelId)
+    if err != nil {
+        return fmt.Errorf("cbes.Destroy() CouchBase %s", err.Error())
+    }
+    return nil
+}
+
+// Update a document in CouchBase and ElasticSearch
+func (o *orm) Update(filterQuery string, model interface{}) error {
+    //TODO Insert Find function here and return the model
+    var modelId = "user:10" //TODO TO DELETE
+
+    err := updateCB(modelId, model)
+    if err != nil {
+        return fmt.Errorf("cbes.Update() CouchBase %s", err.Error())
     }
     return nil
 }

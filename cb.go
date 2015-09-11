@@ -10,8 +10,8 @@ import (
 )
 
 type Bucket struct {
-    Name string
-    Pass string
+    Name             string
+    Pass             string
     OperationTimeout int //seconds
 }
 
@@ -27,11 +27,11 @@ func connectCb(settings *Settings) (*gocb.Cluster, error) {
 }
 
 // open CouchBase bucket
-func openBucket (settings *Settings, cluster *gocb.Cluster) (*gocb.Bucket, error) {
+func openBucket(settings *Settings, cluster *gocb.Cluster) (*gocb.Bucket, error) {
     bucket := settings.CouchBase.Bucket
 
     b, err := cluster.OpenBucket(bucket.Name, bucket.Pass)
-    b.SetOperationTimeout(time.Duration(bucket.OperationTimeout)* time.Second)
+    b.SetOperationTimeout(time.Duration(bucket.OperationTimeout) * time.Second)
 
     if err != nil {
         return nil, err
@@ -56,20 +56,20 @@ func OpenCb(settings *Settings) (*gocb.Bucket, error) {
 }
 
 // get the view name from model interface
-func getModelName(model interface{}) (string){
+func getModelName(model interface{}) (string) {
     viewName := strings.ToLower(reflect.TypeOf(model).Elem().Name())
     return viewName
 }
 
 // get the view from the model interface
-func getView (model interface{}) (string){
+func getView(model interface{}) (string) {
     viewName := strings.ToLower(reflect.TypeOf(model).Elem().Name())
     return "function (doc, meta) {if(doc._TYPE && doc._TYPE == '" + viewName + "') {emit(meta.id, {doc: doc, meta: meta});}}"
 }
 
 // create and upsert the view in CouchBase
-func createModelViewsCB(models map[string]interface{}) error{
-    manager := Connection.cb.Manager(dbSettings.CouchBase.UserName,dbSettings.CouchBase.Pass)
+func createModelViewsCB(models map[string]interface{}) error {
+    manager := Connection.cb.Manager(dbSettings.CouchBase.UserName, dbSettings.CouchBase.Pass)
     views := map[string]gocb.View{}
 
     for _, model := range models {
@@ -95,48 +95,54 @@ func createModelViewsCB(models map[string]interface{}) error{
 
 // insert on CouchBase
 func createCB(model interface{}) error {
+    var err error
+    var count string
+
     viewName := getModelName(model)
 
     num, _, err := Connection.cb.Counter(viewName + ":count", 1, 1, 0)
     if err != nil {
-        fmt.Println("createCB error: ")
-        fmt.Println(err)
-        return err
+        goto end
     }
 
-    s := strconv.FormatUint(num, 10)
+    count = strconv.FormatUint(num, 10)
 
-    fmt.Println(s)
+    _, err = Connection.cb.Insert(viewName + ":" + count, model, 0)
+    if err != nil {
+        goto end
+    }
 
-    _, err1 := Connection.cb.Insert(viewName + ":" + s, model, 0)
-    if err1 != nil {
-        fmt.Println("createCB error: ")
-        fmt.Println(err1)
-        return err1
+end:
+    return err
+}
+
+// insert each on CouchBase
+func createEachCB(models []interface{}) error {
+    for i := range models {
+        err := createCB(models[i])
+        if err != nil {
+            return err
+        }
     }
 
     return nil
 }
 
-func createEachCB(model []interface{}) error {
-    viewName := getModelName(model)
-
-    num, _, err := Connection.cb.Counter(viewName + ":count", 1, 1, 0)
+// remove on CouchBase
+func destroyCB(modelId string) error {
+    _, err := Connection.cb.Remove(modelId, 0)
     if err != nil {
-        fmt.Println("createCB error: ")
-        fmt.Println(err)
         return err
     }
 
-    s := strconv.FormatUint(num, 10)
+    return nil
+}
 
-    fmt.Println(s)
-
-    _, err1 := Connection.cb.Insert(viewName + ":" + s, model, 0)
-    if err1 != nil {
-        fmt.Println("createCB error: ")
-        fmt.Println(err1)
-        return err1
+// update on CouchBase
+func updateCB(modelId string, replaceModel interface{}) error {
+    _, err := Connection.cb.Replace(modelId, &replaceModel, 0, 0)
+    if err != nil {
+        return err
     }
 
     return nil
