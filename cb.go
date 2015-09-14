@@ -5,6 +5,7 @@ import (
     "time"
     "fmt"
     "strconv"
+    "reflect"
 )
 
 type Bucket struct {
@@ -85,33 +86,41 @@ func createModelViewsCB(models map[string]interface{}) error {
     return nil
 }
 
-// insert on CouchBase
-func createCB(model interface{}) error {
+// insert on CouchBase and return the Id
+func createCB(model interface{}) (int64, error) {
     var err error
     var count string
 
-    viewName := getModelName(model)
+    modelName := getModelName(model)
+    cb := *Connection.cb
 
-    num, _, err := Connection.cb.Counter(viewName + ":count", 1, 1, 0)
+    num, _, err := cb.Counter(modelName + ":count", 1, 1, 0)
     if err != nil {
-        goto end
+        return 0, err
     }
 
     count = strconv.FormatUint(num, 10)
+    key := modelName + ":" + count
 
-    _, err = Connection.cb.Insert(viewName + ":" + count, model, 0)
+    id, err := strconv.ParseInt(count, 10, 64)
     if err != nil {
-        goto end
+        return 0, err
     }
 
-end:
-    return err
+    reflect.ValueOf(model).Elem().FieldByName("ID").SetInt(id)
+
+    _, err = cb.Insert(key, model, 0)
+    if err != nil {
+        return 0, err
+    }
+
+    return id, err
 }
 
 // insert each on CouchBase
 func createEachCB(models []interface{}) error {
     for i := range models {
-        err := createCB(models[i])
+        _, err := createCB(models[i])
         if err != nil {
             return err
         }

@@ -10,6 +10,12 @@ import (
     "strconv"
 )
 
+type Model struct {
+    ID        int64  `type:"integer" analyzer:"standard"`
+    CreatedAt string `type:"date" format:"dateOptionalTime"`
+    UpdatedAt string `type:"date" format:"dateOptionalTime"`
+}
+
 type _models struct  {
     mux sync.RWMutex
     cache map[string]interface{}
@@ -122,7 +128,19 @@ func buildModelMapping(model interface{}) string {
         }
     }
 
+    d := reflect.ValueOf(new(Model)).Elem()
+    for i := 0; i < d.NumField(); i++ {
+        field := d.Type().Field(i).Name
+        mapping := convertModelTags(strings.Split(string(d.Type().Field(i).Tag), " "))
+
+        if mapping != nil {
+            prop := modelMapping[modelName].(map[string]interface{})["properties"].(map[string]interface{})
+            prop[field] = mapping
+        }
+    }
+
     mappingJson, err := json.Marshal(modelMapping)
+    fmt.Println(string(mappingJson))
     if err != nil {
         fmt.Println(err)
     }

@@ -2,6 +2,8 @@ package cbes
 
 import (
     "fmt"
+    "time"
+    "reflect"
 )
 
 var tmpQuery = make(map[string]interface{})
@@ -67,10 +69,23 @@ func (o *orm) Limit(limit int) *orm {
 
 // Create new document in CouchBase and Elasticsearch
 func (o *orm) Create(model interface{}) error {
-    err := createCB(model)
+    //TODO add the default values in case they are not set + add document ttl
+    t := time.Now()
+    timeFormatted := t.Format(time.RFC3339)
+
+    reflect.ValueOf(model).Elem().FieldByName("CreatedAt").SetString(timeFormatted)
+    reflect.ValueOf(model).Elem().FieldByName("UpdatedAt").SetString(timeFormatted)
+
+    id, err := createCB(model)
     if err != nil {
         return fmt.Errorf("cbes.Create() CouchBase %s", err.Error())
     }
+
+    err = createEs(id, model)
+    if err != nil {
+        return fmt.Errorf("cbes.Create() ElasticSearch %s", err.Error())
+    }
+
     return nil
 }
 

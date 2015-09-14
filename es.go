@@ -2,8 +2,9 @@ package cbes
 
 import (
     "gopkg.in/olivere/elastic.v2"
-//    "fmt"
     "fmt"
+    "strconv"
+    "reflect"
 )
 
 // connect to elastic search and build the client
@@ -64,7 +65,7 @@ func addMapping(mapping string, modelName string) error {
     index := dbSettings.ElasticSearch.Index
     es := *Connection.es
 
-    res, err := es.PutMapping().Index(index).Type(modelName).BodyString(mapping).Do()
+    res, err := es.PutMapping().IgnoreConflicts(true).Index(index).Type(modelName).BodyString(mapping).Do()
     if err != nil {
         return err
     }
@@ -73,6 +74,28 @@ func addMapping(mapping string, modelName string) error {
     }
     if !res.Acknowledged {
         return fmt.Errorf("expected put mapping ack; got: %v", res.Acknowledged)
+    }
+
+    return nil
+}
+
+// create ElasticSearch document based on model
+func createEs(id int64, model interface{}) error {
+    modelName := getModelName(model)
+    es := *Connection.es
+    index := dbSettings.ElasticSearch.Index
+    key := modelName + ":" + strconv.FormatInt(id, 16)
+
+    reflect.ValueOf(model).Elem().FieldByName("ID").SetInt(id)
+
+    _, err := es.Index().
+        Index(index).
+        Type(modelName).
+        Id(key).
+        BodyJson(model).Do()
+
+    if err != nil {
+        return err
     }
 
     return nil
