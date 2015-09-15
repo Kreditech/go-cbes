@@ -68,10 +68,11 @@ func (o *orm) Limit(limit int) *orm {
 }
 
 // Create new document in CouchBase and Elasticsearch
-func (o *orm) Create(model interface{}) error {
-    //TODO add the default values in case they are not set + add document ttl
-    t := time.Now()
+func (o *orm) Create(m interface{}) error {
+    //TODO add ttl functionality
+    t             := time.Now()
     timeFormatted := t.Format(time.RFC3339)
+    model         := setModelDefaults(m)
 
     reflect.ValueOf(model).Elem().FieldByName("CreatedAt").SetString(timeFormatted)
     reflect.ValueOf(model).Elem().FieldByName("UpdatedAt").SetString(timeFormatted)

@@ -140,12 +140,54 @@ func buildModelMapping(model interface{}) string {
     }
 
     mappingJson, err := json.Marshal(modelMapping)
-    fmt.Println(string(mappingJson))
     if err != nil {
         fmt.Println(err)
     }
 
     return string(mappingJson)
+}
+
+// check the values of the given model and if they are not set, set the default values from model Tags
+func setModelDefaults(model interface{}) interface{} {
+    m := reflect.ValueOf(model).Elem()
+
+    for i := 0; i < m.NumField(); i++ {
+        field     := m.Type().Field(i).Name
+        def       := m.Type().Field(i).Tag.Get("default")
+        fieldVal  := m.FieldByName(field)
+        fieldKind := fieldVal.Kind()
+
+        switch fieldKind {
+        case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+            if fieldVal.Int() == 0 && def != "" {
+                i, err := strconv.ParseInt(def, 10, 64)
+                if err == nil {
+                    fieldVal.SetInt(i)
+                }
+
+            }
+        case reflect.Float32, reflect.Float64:
+            if fieldVal.Float() == 0 && def != ""{
+                i, err := strconv.ParseFloat(def, 64)
+                if err == nil {
+                    fieldVal.SetFloat(i)
+                }
+            }
+        case reflect.String:
+            if fieldVal.String() == "" && def != ""{
+                fieldVal.SetString(def)
+            }
+        case reflect.Bool:
+            if fieldVal.Bool() == false  && def != ""{
+                i, err := strconv.ParseBool(def)
+                if err == nil {
+                    fieldVal.SetBool(i)
+                }
+            }
+        }
+    }
+
+    return model
 }
 
 // import all models mapping and view into CouchBase and ElasticSearch
