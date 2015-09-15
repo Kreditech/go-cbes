@@ -6,7 +6,7 @@ import (
     "fmt"
 )
 
-var Connection = new(db)
+var connection = new(db)
 
 type db struct {
     es *elastic.Client
@@ -14,16 +14,16 @@ type db struct {
 }
 
 // Opens DB connection
-func Open(settings *Settings) error {
+func open(settings *Settings) error {
     var err error
 
-    Connection.es, err = OpenEs(settings)
+    connection.es, err = openEs(settings)
     if err != nil {
         err = fmt.Errorf("register ElasticSearch %s", err.Error())
         goto end
     }
 
-    Connection.cb, err = OpenCb(settings)
+    connection.cb, err = openCb(settings)
     if err != nil {
         err = fmt.Errorf("register CouchBase %s", err.Error())
         goto end

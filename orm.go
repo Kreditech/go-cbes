@@ -69,13 +69,13 @@ func (o *orm) Limit(limit int) *orm {
 
 // Create new document in CouchBase and Elasticsearch
 func (o *orm) Create(m interface{}) error {
-    //TODO add ttl functionality
     t             := time.Now()
     timeFormatted := t.Format(time.RFC3339)
     model         := setModelDefaults(m)
 
     reflect.ValueOf(model).Elem().FieldByName("CreatedAt").SetString(timeFormatted)
     reflect.ValueOf(model).Elem().FieldByName("UpdatedAt").SetString(timeFormatted)
+    reflect.ValueOf(model).Elem().FieldByName("TYPE").SetString(getModelName(model))
 
     id, err := createCB(model)
     if err != nil {
@@ -90,12 +90,15 @@ func (o *orm) Create(m interface{}) error {
     return nil
 }
 
-// Create a splice of documents in CouchBase and ElasticSearch
-func (o *orm) CreateEach(models []interface{}) error {
+// Create a variadic of documents in CouchBase and ElasticSearch
+func (o *orm) CreateEach(models ...interface{}) error {
+    var err error
 
-    err := createEachCB(models)
-    if err != nil {
-        return fmt.Errorf("cbes.CreateEach() CouchBase %s", err.Error())
+    for _, model := range models {
+        err = o.Create(model)
+        if err != nil {
+            return fmt.Errorf("cbes.CreateEach() CouchBase %s", err.Error())
+        }
     }
 
     return nil

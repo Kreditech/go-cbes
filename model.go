@@ -12,6 +12,7 @@ import (
 
 type Model struct {
     ID        int64  `type:"integer" analyzer:"standard"`
+    TYPE      string `type:"string" analyzer:"keyword" index:"analyzed"`
     CreatedAt string `type:"date" format:"dateOptionalTime"`
     UpdatedAt string `type:"date" format:"dateOptionalTime"`
 }
@@ -120,8 +121,24 @@ func buildModelMapping(model interface{}) string {
 
     for i := 0; i < m.NumField(); i++ {
         field := m.Type().Field(i).Name
-        mapping := convertModelTags(strings.Split(string(m.Type().Field(i).Tag), " "))
 
+        if field == "ttl" {
+            ttl, err := strconv.Atoi(m.Type().Field(i).Tag.Get("ttl"))
+            if err != nil {
+                panic(err)
+            }
+
+            ttl = ttl * 1000
+            prop := modelMapping[modelName].(map[string]interface{})
+            prop["_ttl"] = map[string]interface{}{
+                "enabled": true,
+                "default": ttl,
+            }
+
+            continue
+        }
+
+        mapping := convertModelTags(strings.Split(string(m.Type().Field(i).Tag), " "))
         if mapping != nil {
             prop := modelMapping[modelName].(map[string]interface{})["properties"].(map[string]interface{})
             prop[field] = mapping
@@ -167,18 +184,18 @@ func setModelDefaults(model interface{}) interface{} {
 
             }
         case reflect.Float32, reflect.Float64:
-            if fieldVal.Float() == 0 && def != ""{
+            if fieldVal.Float() == 0 && def != "" {
                 i, err := strconv.ParseFloat(def, 64)
                 if err == nil {
                     fieldVal.SetFloat(i)
                 }
             }
         case reflect.String:
-            if fieldVal.String() == "" && def != ""{
+            if fieldVal.String() == "" && def != "" {
                 fieldVal.SetString(def)
             }
         case reflect.Bool:
-            if fieldVal.Bool() == false  && def != ""{
+            if fieldVal.Bool() == false  && def != "" {
                 i, err := strconv.ParseBool(def)
                 if err == nil {
                     fieldVal.SetBool(i)

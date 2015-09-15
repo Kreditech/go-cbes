@@ -42,7 +42,7 @@ func createIndex(settings *Settings, client *elastic.Client) (bool, error) {
 }
 
 // Open connection
-func OpenEs (settings *Settings) (*elastic.Client, error) {
+func openEs (settings *Settings) (*elastic.Client, error) {
     client, err := connectEs(settings)
     if err != nil {
         return nil, err
@@ -63,7 +63,7 @@ func OpenEs (settings *Settings) (*elastic.Client, error) {
 // put model mapping
 func addMapping(mapping string, modelName string) error {
     index := dbSettings.ElasticSearch.Index
-    es := *Connection.es
+    es := *connection.es
 
     res, err := es.PutMapping().IgnoreConflicts(true).Index(index).Type(modelName).BodyString(mapping).Do()
     if err != nil {
@@ -82,9 +82,9 @@ func addMapping(mapping string, modelName string) error {
 // create ElasticSearch document based on model
 func createEs(id int64, model interface{}) error {
     modelName := getModelName(model)
-    es := *Connection.es
+    es := *connection.es
     index := dbSettings.ElasticSearch.Index
-    key := modelName + ":" + strconv.FormatInt(id, 16)
+    key := modelName + ":" + strconv.FormatInt(id, 10)
 
     reflect.ValueOf(model).Elem().FieldByName("ID").SetInt(id)
 

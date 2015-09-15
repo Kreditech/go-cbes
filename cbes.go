@@ -31,7 +31,7 @@ type cbesConnection struct {
 func RegisterDataBase(settings *Settings) {
     var err error
 
-    err = Open(settings)
+    err = open(settings)
     if err != nil {
         goto printError
     }

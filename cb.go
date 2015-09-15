@@ -40,7 +40,7 @@ func openBucket(settings *Settings, cluster *gocb.Cluster) (*gocb.Bucket, error)
 }
 
 // open CouchBase cluster and bucket
-func OpenCb(settings *Settings) (*gocb.Bucket, error) {
+func openCb(settings *Settings) (*gocb.Bucket, error) {
     cluster, err := connectCb(settings)
     if err != nil {
         return nil, err
@@ -57,12 +57,12 @@ func OpenCb(settings *Settings) (*gocb.Bucket, error) {
 // get the view from the model interface
 func getView (model interface{}) string {
     viewName := getModelName(model)
-    return "function (doc, meta) {if(doc._TYPE && doc._TYPE == '" + viewName + "') {emit(meta.id, {doc: doc, meta: meta});}}"
+    return "function (doc, meta) {if(doc.TYPE && doc.TYPE == '" + viewName + "') {emit(meta.id, {doc: doc, meta: meta});}}"
 }
 
 // create and upsert the view in CouchBase
 func createModelViewsCB(models map[string]interface{}) error {
-    manager := Connection.cb.Manager(dbSettings.CouchBase.UserName, dbSettings.CouchBase.Pass)
+    manager := *connection.cb.Manager(dbSettings.CouchBase.UserName, dbSettings.CouchBase.Pass)
     views := map[string]gocb.View{}
 
     for _, model := range models {
@@ -92,7 +92,7 @@ func createCB(model interface{}) (int64, error) {
     var count string
 
     modelName := getModelName(model)
-    cb := *Connection.cb
+    cb := *connection.cb
 
     num, _, err := cb.Counter(modelName + ":count", 1, 1, 0)
     if err != nil {
@@ -107,9 +107,24 @@ func createCB(model interface{}) (int64, error) {
         return 0, err
     }
 
-    reflect.ValueOf(model).Elem().FieldByName("ID").SetInt(id)
+    m := reflect.ValueOf(model).Elem()
+    m.FieldByName("ID").SetInt(id)
 
-    _, err = cb.Insert(key, model, 0)
+    ttl := 0
+    for i := 0; i < m.NumField(); i++ {
+        field := m.Type().Field(i).Name
+
+        if field == "ttl" {
+            _ttl, err := strconv.Atoi(m.Type().Field(i).Tag.Get("ttl"))
+            if err != nil {
+                panic(err)
+            }
+
+            ttl = _ttl
+        }
+    }
+
+    _, err = cb.Insert(key, model, uint32(ttl))
     if err != nil {
         return 0, err
     }
@@ -117,21 +132,9 @@ func createCB(model interface{}) (int64, error) {
     return id, err
 }
 
-// insert each on CouchBase
-func createEachCB(models []interface{}) error {
-    for i := range models {
-        _, err := createCB(models[i])
-        if err != nil {
-            return err
-        }
-    }
-
-    return nil
-}
-
 // remove on CouchBase
 func destroyCB(modelId string) error {
-    _, err := Connection.cb.Remove(modelId, 0)
+    _, err := connection.cb.Remove(modelId, 0)
     if err != nil {
         return err
     }
@@ -141,7 +144,7 @@ func destroyCB(modelId string) error {
 
 // update on CouchBase
 func updateCB(modelId string, replaceModel interface{}) error {
-    _, err := Connection.cb.Replace(modelId, &replaceModel, 0, 0)
+    _, err := connection.cb.Replace(modelId, &replaceModel, 0, 0)
     if err != nil {
         return err
     }
