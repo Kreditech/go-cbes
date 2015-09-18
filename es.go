@@ -100,3 +100,16 @@ func createEs(id int64, model interface{}) error {
 
     return nil
 }
+
+// search in ElasticSearch
+func searchEs(query string) interface{} {
+    es := *connection.es
+    index := dbSettings.ElasticSearch.Index
+
+    res, err := es.Search().Index(index).Source(query).Do()
+    if err != nil {
+        panic(err)
+    }
+
+    return res
+}

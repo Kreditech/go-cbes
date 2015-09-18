@@ -4,8 +4,9 @@ import (
     "fmt"
     "time"
     "reflect"
+    "encoding/json"
 )
-
+var tmpModel interface{}
 var tmpQuery = make(map[string]interface{})
 var queryTemplate = map[string]interface{}{
     "query": map[string]interface{}{
@@ -29,35 +30,96 @@ var queryTemplate = map[string]interface{}{
 }
 
 type functions interface  {
-    Find()       *orm
-    FindOne()    *orm
+    Find()       *Orm
+    Where()      *Orm
+    FindOne()    *Orm
     Create()
     CreateEach()
     Update()
     Destroy()
     Reindex()
-    Aggregate()  *orm
-    Limit()      *orm
-    Order()      *orm
-    Skip()       *orm
+    Aggregate()  *Orm
+    Limit()      *Orm
+    Order()      *Orm
+    Skip()       *Orm
     Do()         interface{}
 }
 
 
-type orm struct {
+type Orm struct {
     db *db
 }
 
-// Set find query in ElasticSearch
-func (o *orm) Find(model interface{}, query interface{}) *orm {
-    tmpQuery["query"] = queryTemplate["query"]
+// Execute builded query
+func (o *Orm) Do() interface{} {
+    j, e := json.Marshal(tmpQuery)
+    if e != nil {
+        fmt.Println(e)
+    }
 
-    fmt.Println(queryTemplate)
+    fmt.Println(string(j))
+
+    m := reflect.ValueOf(tmpModel).Elem()
+
+    for i := 0; i < m.NumField(); i++ {
+        field := m.Type().Field(i).Name
+
+        fmt.Println(field)
+    }
+
+    s := searchEs(string(j))
+    fmt.Println(s)
+    return tmpModel
+}
+
+// Set the model witch you want to find
+func (o *Orm) Find(model interface{}) *Orm {
+    typeName := getModelName(model)
+    _model, ok := modelsCache.get(typeName); if ok {
+        tmpModel = _model
+    }
+
+    // clone queryTemplate into tmpQuery
+    _copy, err := json.Marshal(queryTemplate)
+    if err != nil {
+        panic(err)
+    }
+
+    err = json.Unmarshal(_copy, &tmpQuery)
+    if err != nil {
+        panic(err)
+    }
+
+    // set tmpQuery model type
+    typeVal := tmpQuery["query"].(map[string]interface{})["filtered"]
+    typeVal = typeVal.(map[string]interface{})["query"]
+    typeVal = typeVal.(map[string]interface{})["bool"]
+    typeVal = typeVal.(map[string]interface{})["must"].([]interface{})[0]
+    typeVal = typeVal.(map[string]interface{})["term"]
+    typeVal = typeVal.(map[string]interface{})["_type"]
+    typeVal.(map[string]interface{})["value"] = typeName
+
+    return o
+}
+
+func (o *Orm) Where(query string) *Orm {
+    if len(tmpQuery) == 0 {
+        panic("You must declare Find() first!")
+    }
+
+    var q map[string]interface{}
+
+    err := json.Unmarshal([]byte(query), &q)
+    if err != nil {
+        panic(err)
+    }
+
+    tmpQuery["query"].(map[string]interface{})["filtered"].(map[string]interface{})["filter"] = q
     return o
 }
 
 // Set limit to Find() query in ElasticSearch
-func (o *orm) Limit(limit int) *orm {
+func (o *Orm) Limit(limit int) *Orm {
     if len(tmpQuery) == 0 {
         panic("You must declare Find() first!")
     }
@@ -68,7 +130,7 @@ func (o *orm) Limit(limit int) *orm {
 }
 
 // Create new document in CouchBase and Elasticsearch
-func (o *orm) Create(m interface{}) error {
+func (o *Orm) Create(m interface{}) error {
     t             := time.Now()
     timeFormatted := t.Format(time.RFC3339)
     model         := setModelDefaults(m)
@@ -91,7 +153,7 @@ func (o *orm) Create(m interface{}) error {
 }
 
 // Create a variadic of documents in CouchBase and ElasticSearch
-func (o *orm) CreateEach(models ...interface{}) error {
+func (o *Orm) CreateEach(models ...interface{}) error {
     var err error
 
     for _, model := range models {
@@ -105,7 +167,7 @@ func (o *orm) CreateEach(models ...interface{}) error {
 }
 
 // Destroy a document in CouchBase and ElasticSearch
-func (o *orm) Destroy(filterQuery string) error {
+func (o *Orm) Destroy(filterQuery string) error {
     //TODO Insert Find function here and return the model id
     var modelId = "user:4" //TODO TO DELETE
 
@@ -117,7 +179,7 @@ func (o *orm) Destroy(filterQuery string) error {
 }
 
 // Update a document in CouchBase and ElasticSearch
-func (o *orm) Update(filterQuery string, model interface{}) error {
+func (o *Orm) Update(filterQuery string, model interface{}) error {
     //TODO Insert Find function here and return the model
     var modelId = "user:10" //TODO TO DELETE
 
@@ -129,6 +191,6 @@ func (o *orm) Update(filterQuery string, model interface{}) error {
 }
 
 // Create a new ORM object with
-func NewOrm() *orm {
-    return new(orm)
+func NewOrm() *Orm {
+    return new(Orm)
 }

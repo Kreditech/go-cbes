@@ -48,12 +48,11 @@ func (m *_models) get(name string) (model interface{}, ok bool) {
 
 // register a model
 func registerModel (model interface{}) error {
-    _model := reflect.TypeOf(model).Elem()
-    modelName := strings.ToLower(_model.Name())
+    name := getModelName(model)
 
-    added := modelsCache.add(modelName, model)
+    added := modelsCache.add(name, model)
     if !added {
-        return fmt.Errorf("%s model allready registered", _model.Name())
+        return fmt.Errorf("%s model allready registered", name)
     }
 
     return nil
