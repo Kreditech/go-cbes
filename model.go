@@ -225,3 +225,58 @@ func importAllModels() error {
 
     return nil
 }
+
+// Receive ElasticSearch Hit and set a clean model with it
+func setModel(_model, responseModel interface{}) interface{} {
+    m := reflect.New(reflect.ValueOf(_model).Elem().Type()).Elem()
+    r := responseModel.(map[string]interface{})
+
+    for i := 0; i < m.NumField(); i++ {
+        field := m.Type().Field(i).Name
+
+        if field == "Model" {
+            continue
+        }
+
+        kind  := m.Field(i).Kind()
+        val   := r[field]
+        set   := m.FieldByName(field)
+        valType := reflect.TypeOf(val).Kind()
+
+        switch kind {
+        case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+            if valType == reflect.Float64 {
+                val = int(val.(float64))
+            }
+
+            if valType == reflect.Float32 {
+                val = int(val.(float32))
+            }
+
+            set.SetInt(reflect.ValueOf(val).Int())
+        case reflect.Float32, reflect.Float64:
+            set.SetFloat(val.(float64))
+        case reflect.String:
+            set.SetString(val.(string))
+        case reflect.Bool:
+            set.SetBool(val.(bool))
+        }
+    }
+
+    id := r["ID"]
+    idType := reflect.TypeOf(id).Kind()
+    if idType == reflect.Float64 {
+        id = int(id.(float64))
+    }
+
+    if idType == reflect.Float32 {
+        id = int(id.(float32))
+    }
+
+    m.FieldByName("ID").SetInt(reflect.ValueOf(id).Int())
+    m.FieldByName("TYPE").SetString(r["TYPE"].(string))
+    m.FieldByName("CreatedAt").SetString(r["CreatedAt"].(string))
+    m.FieldByName("UpdatedAt").SetString(r["UpdatedAt"].(string))
+
+    return m.Interface()
+}

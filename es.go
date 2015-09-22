@@ -102,7 +102,7 @@ func createEs(id int64, model interface{}) error {
 }
 
 // search in ElasticSearch
-func searchEs(query string) interface{} {
+func searchEs(query string) *elastic.SearchResult {
     es := *connection.es
     index := dbSettings.ElasticSearch.Index
 

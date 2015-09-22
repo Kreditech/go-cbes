@@ -27,6 +27,7 @@ var queryTemplate = map[string]interface{}{
             "filter": make(map[string]interface{}),
         },
     },
+    "sort": []interface{}{},
 }
 
 type functions interface  {
@@ -51,28 +52,34 @@ type Orm struct {
 }
 
 // Execute builded query
-func (o *Orm) Do() interface{} {
-    j, e := json.Marshal(tmpQuery)
-    if e != nil {
-        fmt.Println(e)
+func (o *Orm) Do() []interface{} {
+    jsonQuery, err := json.Marshal(tmpQuery)
+    if err != nil {
+        panic(err)
     }
 
-    fmt.Println(string(j))
+    res := searchEs(string(jsonQuery))
+    data := []interface{}{}
 
-    m := reflect.ValueOf(tmpModel).Elem()
-
-    for i := 0; i < m.NumField(); i++ {
-        field := m.Type().Field(i).Name
-
-        fmt.Println(field)
+    if (res.TotalHits() == 0) {
+        return data
     }
 
-    s := searchEs(string(j))
-    fmt.Println(s)
-    return tmpModel
+    for _, hit := range res.Hits.Hits {
+        item := make(map[string]interface{})
+        err := json.Unmarshal(*hit.Source, &item)
+        if err != nil {
+            panic(err)
+        }
+
+        data = append(data, setModel(tmpModel, item))
+    }
+
+    return data
 }
 
 // Set the model witch you want to find
+// If you don't set Limit Find ElasticSearch will use the default Limit (10)
 func (o *Orm) Find(model interface{}) *Orm {
     typeName := getModelName(model)
     _model, ok := modelsCache.get(typeName); if ok {
@@ -102,6 +109,7 @@ func (o *Orm) Find(model interface{}) *Orm {
     return o
 }
 
+// Set query for ElasticSearch
 func (o *Orm) Where(query string) *Orm {
     if len(tmpQuery) == 0 {
         panic("You must declare Find() first!")
@@ -125,7 +133,30 @@ func (o *Orm) Limit(limit int) *Orm {
     }
 
     tmpQuery["size"] = limit
-    fmt.Println(tmpQuery)
+    return o
+}
+
+// Set ElasticSearch sort. direction: true = 'asc', false = 'desc'
+func (o *Orm) Order(field string, direction bool) *Orm {
+    if len(tmpQuery) == 0 {
+        panic("You must declare Find() first!")
+    }
+
+    dir := "asc"
+    if direction == false {
+        dir = "desc"
+    }
+
+    sort := map[string]interface{}{
+        field: map[string]interface{}{
+            "order": dir,
+        },
+    }
+
+    typeVal := tmpQuery["sort"].([]interface{})
+    typeVal = append(typeVal, sort)
+
+    tmpQuery["sort"] = typeVal
     return o
 }
 
