@@ -5,6 +5,7 @@ import (
     "time"
     "reflect"
     "encoding/json"
+    "strconv"
 )
 var tmpModel interface{}
 var tmpQuery = make(map[string]interface{})
@@ -33,7 +34,6 @@ var queryTemplate = map[string]interface{}{
 type functions interface  {
     Find()       *Orm
     Where()      *Orm
-    FindOne()    *Orm
     Create()
     CreateEach()
     Update()
@@ -126,7 +126,7 @@ func (o *Orm) Where(query string) *Orm {
     return o
 }
 
-// Set limit to Find() query in ElasticSearch
+// Set limit to Find() query in ElasticSearch. Max limit = 999999999
 func (o *Orm) Limit(limit int) *Orm {
     if len(tmpQuery) == 0 {
         panic("You must declare Find() first!")
@@ -210,14 +210,35 @@ func (o *Orm) Destroy(filterQuery string) error {
 }
 
 // Update a document in CouchBase and ElasticSearch
-func (o *Orm) Update(filterQuery string, model interface{}) error {
-    //TODO Insert Find function here and return the model
-    var modelId = "user:10" //TODO TO DELETE
+func (o *Orm) Update(model interface{}, query string) error {
+    var err error
+    models := o.Find(model).Where(query).Limit(999999999).Do()
 
-    err := updateCB(modelId, model)
-    if err != nil {
-        return fmt.Errorf("cbes.Update() CouchBase %s", err.Error())
+    for _, m := range models {
+        _m            := reflect.ValueOf(m)
+        modelType     := _m.FieldByName("TYPE").String()
+        modelID       := _m.FieldByName("ID").Int()
+        createdAt     := _m.FieldByName("CreatedAt").String()
+        id            := modelType + ":" + strconv.FormatInt(modelID, 10)
+        timeFormatted := time.Now().Format(time.RFC3339)
+
+        _model        := setModelDefaults(model)
+        reflect.ValueOf(_model).Elem().FieldByName("CreatedAt").SetString(createdAt)
+        reflect.ValueOf(_model).Elem().FieldByName("UpdatedAt").SetString(timeFormatted)
+        reflect.ValueOf(_model).Elem().FieldByName("TYPE").SetString(modelType)
+        reflect.ValueOf(_model).Elem().FieldByName("ID").SetInt(modelID)
+
+        err = updateCB(id, _model)
+        if err != nil {
+            return fmt.Errorf("cbes.Update() CouchBase %s", err.Error())
+        }
+
+        err = updateES(id, _model)
+        if err != nil {
+            return fmt.Errorf("cbes.Update() ElasticSearch %s", err.Error())
+        }
     }
+
     return nil
 }
 

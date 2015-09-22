@@ -113,3 +113,22 @@ func searchEs(query string) *elastic.SearchResult {
 
     return res
 }
+
+// update on ElasticSearch
+func updateES(id string, model interface{}) error {
+    modelName := getModelName(model)
+    es := *connection.es
+    index := dbSettings.ElasticSearch.Index
+
+    _, err := es.Update().
+        Index(index).
+        Type(modelName).
+        Id(id).
+        Doc(model).Do()
+
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
