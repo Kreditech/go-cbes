@@ -7,6 +7,7 @@ import (
     "encoding/json"
     "strconv"
 )
+
 var tmpModel interface{}
 var tmpQuery = make(map[string]interface{})
 var queryTemplate = map[string]interface{}{
@@ -212,7 +213,7 @@ func (o *Orm) Destroy(filterQuery string) error {
 // Update a document in CouchBase and ElasticSearch
 func (o *Orm) Update(model interface{}, query string) error {
     var err error
-    models := o.Find(model).Where(query).Limit(999999999).Do()
+    models := o.Find(model).Where(query).Limit(999999999).Order("ID", true).Do()
 
     for _, m := range models {
         _m            := reflect.ValueOf(m)
@@ -221,19 +222,79 @@ func (o *Orm) Update(model interface{}, query string) error {
         createdAt     := _m.FieldByName("CreatedAt").String()
         id            := modelType + ":" + strconv.FormatInt(modelID, 10)
         timeFormatted := time.Now().Format(time.RFC3339)
+        _model        := reflect.ValueOf(model).Elem()
+        modelClone    := reflect.New(_model.Type()).Elem()
 
-        _model        := setModelDefaults(model)
-        reflect.ValueOf(_model).Elem().FieldByName("CreatedAt").SetString(createdAt)
-        reflect.ValueOf(_model).Elem().FieldByName("UpdatedAt").SetString(timeFormatted)
-        reflect.ValueOf(_model).Elem().FieldByName("TYPE").SetString(modelType)
-        reflect.ValueOf(_model).Elem().FieldByName("ID").SetInt(modelID)
+        for i := 0; i < _model.NumField(); i++ {
+            field      := _model.Field(i)
+            name       := _model.Type().Field(i).Name
+            _mField    := _m.FieldByName(name)
+            cloneField := modelClone.FieldByName(name)
 
-        err = updateCB(id, _model)
+            switch field.Kind() {
+            case reflect.Int64:
+                var empty, val int64
+
+                if field.Int() != empty {
+                    val = field.Int()
+                } else {
+                    val = _mField.Int()
+                }
+
+                cloneField.SetInt(val)
+            case reflect.Float64:
+                var empty, val float64
+
+                if field.Float() != empty {
+                    val = field.Float()
+                } else {
+                    val = _mField.Float()
+                }
+
+                cloneField.SetFloat(val)
+            case reflect.String:
+                var empty, val string
+
+                if field.String() != empty {
+                    val = field.String()
+                } else {
+                    val = _mField.String()
+                }
+
+                cloneField.SetString(val)
+            case reflect.Bool:
+                var empty, val bool
+
+                if field.Bool() != empty {
+                    val = field.Bool()
+                } else {
+                    val = _mField.Bool()
+                }
+
+                cloneField.SetBool(val)
+            case reflect.Slice, reflect.Map:
+                val := reflect.ValueOf(field.Interface())
+
+                if val.Len() == 0 {
+                    val = reflect.ValueOf(_mField.Interface())
+                }
+
+                cloneField.Set(val)
+            }
+        }
+
+        modelClone.FieldByName("UpdatedAt").SetString(timeFormatted)
+        modelClone.FieldByName("CreatedAt").SetString(createdAt)
+        modelClone.FieldByName("TYPE").SetString(modelType)
+        modelClone.FieldByName("ID").SetInt(modelID)
+
+        setModel := modelClone.Interface()
+        err = updateCB(id, setModel)
         if err != nil {
             return fmt.Errorf("cbes.Update() CouchBase %s", err.Error())
         }
 
-        err = updateES(id, _model)
+        err = updateES(id, setModel)
         if err != nil {
             return fmt.Errorf("cbes.Update() ElasticSearch %s", err.Error())
         }

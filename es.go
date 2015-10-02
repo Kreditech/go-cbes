@@ -60,12 +60,28 @@ func openEs (settings *Settings) (*elastic.Client, error) {
     return client, nil
 }
 
-// put model mapping
+// put model mapping if it doesn't exist
 func addMapping(mapping string, modelName string) error {
+    var err error
     index := dbSettings.ElasticSearch.Index
     es := *connection.es
 
-    res, err := es.PutMapping().IgnoreConflicts(true).Index(index).Type(modelName).BodyString(mapping).Do()
+    currentMapping, err := es.GetMapping().Index(index).Type(modelName).Do()
+    if err != nil {
+        return fmt.Errorf("expected get mapping response; got: %v", err.Error())
+    }
+
+    fmt.Println(currentMapping)
+    if len(currentMapping) > 0 {
+        return nil
+    }
+
+    res, err := es.PutMapping().
+        IgnoreConflicts(true).
+        Index(index).
+        Type(modelName).
+        BodyString(mapping).Do()
+
     if err != nil {
         return err
     }

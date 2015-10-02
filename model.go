@@ -5,9 +5,9 @@ import (
     "sync"
     "fmt"
     "strings"
-    "regexp"
     "encoding/json"
     "strconv"
+    "regexp"
 )
 
 type Model struct {
@@ -61,41 +61,51 @@ func registerModel (model interface{}) error {
 // convert model tags into objects and prepare them for ElasticSearch mapping builder
 func convertModelTags(_tags []string) interface{} {
     data := make(map[string]interface{})
+    reg, err := regexp.Compile("[^-A-Za-z0-9_:+{},' *-]+")
 
-    reg, err := regexp.Compile("[^-A-Za-z0-9_:]+")
     if err != nil {
         panic(err)
     }
 
     for _, val := range _tags {
         clearString := reg.ReplaceAllString(val, "")
-        tags := strings.Split(clearString, ":")
+        tag := strings.Split(clearString, ":")
 
-        if (tags[0] == "default") {
+        if tag[0] == "default" || tag[0] == "json" {
             continue
         }
 
-        if len(tags) < 2 {
+        if len(tag) < 2 {
             return nil
         }
 
-        if len(tags) == 2 {
-            i, err := strconv.ParseInt(tags[1], 10, 64)
-            if err == nil {
-                data[string(tags[0])] = i
+        tagVal := tag[1]
+        if len(tag) > 2 {
+            tagVal = strings.Join(tag[1:], ":")
+            tagVal = strings.Replace(tagVal, "'", "\"", -1)
+
+            j := make(map[string]interface{})
+            err := json.Unmarshal([]byte(tagVal), &j)
+            if err != nil {
+                fmt.Println(err)
                 continue
             }
 
-            b, err := strconv.ParseBool(tags[1])
+            data[string(tag[0])] = j
+        } else {
+            i, err := strconv.ParseInt(tagVal, 10, 64)
             if err == nil {
-                data[string(tags[0])] = b
+                data[string(tag[0])] = i
                 continue
             }
 
-            data[string(tags[0])] = tags[1]
-        } else if len(tags) > 2 {
-            obj := []string{strings.Join(tags[1:], ":")}
-            data[tags[0]] = convertModelTags(obj)
+            b, err := strconv.ParseBool(tagVal)
+            if err == nil {
+                data[string(tag[0])] = b
+                continue
+            }
+
+            data[string(tag[0])] = tag[1]
         }
     }
 
@@ -104,8 +114,15 @@ func convertModelTags(_tags []string) interface{} {
 
 // get the view name from model interface
 func getModelName(model interface{}) (string){
-    name := strings.ToLower(reflect.TypeOf(model).Elem().Name())
-    return name
+    var name string
+    _m := reflect.TypeOf(model)
+
+    if _m.Kind() == reflect.Struct {
+        name = _m.Name()
+    } else {
+        name = _m.Elem().Name()
+    }
+    return strings.ToLower(name)
 }
 
 // build ElasticSearch mapping from model struct tags
@@ -137,7 +154,7 @@ func buildModelMapping(model interface{}) string {
             continue
         }
 
-        mapping := convertModelTags(strings.Split(string(m.Type().Field(i).Tag), " "))
+        mapping := convertModelTags(strings.Split(string(m.Type().Field(i).Tag), "\" "))
         if mapping != nil {
             prop := modelMapping[modelName].(map[string]interface{})["properties"].(map[string]interface{})
             prop[field] = mapping
@@ -216,7 +233,6 @@ func importAllModels() error {
 
     for _, model := range modelsCache.cache {
         modelMapping := buildModelMapping(model)
-
         err := addMapping(modelMapping, getModelName(model))
         if err != nil  {
             return err
@@ -238,19 +254,20 @@ func setModel(_model, responseModel interface{}) interface{} {
             continue
         }
 
-        kind  := m.Field(i).Kind()
-        val   := r[field]
         set   := m.FieldByName(field)
-        valType := reflect.TypeOf(val).Kind()
+        kind  := set.Kind()
+        val   := r[field]
 
         switch kind {
         case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+            valType := reflect.TypeOf(val).Kind()
+
             if valType == reflect.Float64 {
-                val = int(val.(float64))
+                val = int64(val.(float64))
             }
 
             if valType == reflect.Float32 {
-                val = int(val.(float32))
+                val = int64(val.(float32))
             }
 
             set.SetInt(reflect.ValueOf(val).Int())
@@ -260,6 +277,49 @@ func setModel(_model, responseModel interface{}) interface{} {
             set.SetString(val.(string))
         case reflect.Bool:
             set.SetBool(val.(bool))
+        case reflect.Map:
+            resMap := reflect.ValueOf(val)
+            set.Set(resMap)
+        case reflect.Slice:
+            resSliceType := reflect.TypeOf(val)
+
+            if resSliceType == reflect.TypeOf([]interface{}{}) {
+                v := reflect.ValueOf(val)
+
+                if v.Len() < 1 {
+                    continue
+                }
+
+                modelSliceType := m.Field(i).Type()
+                switch modelSliceType {
+                case reflect.TypeOf([]string{}):
+                    tmp := []string{}
+
+                    for i := 0; i < v.Len(); i++ {
+                        tmp = append(tmp, v.Index(i).Elem().String())
+                    }
+
+                    set.Set(reflect.ValueOf(tmp))
+                case reflect.TypeOf([]int{}), reflect.TypeOf([]int8{}), reflect.TypeOf([]int16{}), reflect.TypeOf([]int32{}), reflect.TypeOf([]int64{}):
+                    tmp := []int64{}
+
+                    for i := 0; i < v.Len(); i++ {
+                        tmp = append(tmp, int64(v.Index(i).Elem().Float()))
+                    }
+
+                    set.Set(reflect.ValueOf(tmp))
+                case reflect.TypeOf([]float32{}), reflect.TypeOf([]float64{}):
+                    tmp := []float64{}
+
+                    for i := 0; i < v.Len(); i++ {
+                        tmp = append(tmp, v.Index(i).Elem().Float())
+                    }
+
+                    set.Set(reflect.ValueOf(tmp))
+                case reflect.TypeOf([]interface{}{}):
+                    set.Set(v)
+                }
+            }
         }
     }
 
