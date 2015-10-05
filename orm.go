@@ -52,7 +52,8 @@ type Orm struct {
     db *db
 }
 
-// Execute builded query
+// Execute builded query. If Aggregate() method is used this method will
+// return the aggregations result from ElasticSearch
 func (o *Orm) Do() []interface{} {
     jsonQuery, err := json.Marshal(tmpQuery)
     if err != nil {
@@ -63,6 +64,22 @@ func (o *Orm) Do() []interface{} {
     data := []interface{}{}
 
     if (res.TotalHits() == 0) {
+        return data
+    }
+
+    if res.Aggregations != nil {
+        aggJson, err := json.Marshal(res.Aggregations)
+        if err != nil {
+            panic(err)
+        }
+
+        items := make(map[string]interface{})
+        err = json.Unmarshal(aggJson, &items)
+        if err != nil {
+            panic(err)
+        }
+
+        data = append(data, items)
         return data
     }
 
@@ -170,6 +187,24 @@ func (o *Orm) Order(field string, direction bool) *Orm {
     typeVal = append(typeVal, sort)
 
     tmpQuery["sort"] = typeVal
+    return o
+}
+
+// Aggregate data using ElasticSearch
+func (o *Orm) Aggregate(query string) *Orm {
+    if len(tmpQuery) == 0 {
+        panic("You must declare Find() first!")
+    }
+
+    var q map[string]interface{}
+
+    err := json.Unmarshal([]byte(query), &q)
+    if err != nil {
+        return o
+    }
+
+    tmpQuery["aggs"] = q
+
     return o
 }
 
