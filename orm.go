@@ -120,7 +120,7 @@ func (o *Orm) Where(query string) *Orm {
 
     err := json.Unmarshal([]byte(query), &q)
     if err != nil {
-        panic(err)
+        return o
     }
 
     tmpQuery["query"].(map[string]interface{})["filtered"].(map[string]interface{})["filter"] = q
@@ -199,14 +199,26 @@ func (o *Orm) CreateEach(models ...interface{}) error {
 }
 
 // Destroy a document in CouchBase and ElasticSearch
-func (o *Orm) Destroy(filterQuery string) error {
-    //TODO Insert Find function here and return the model id
-    var modelId = "user:4" //TODO TO DELETE
+func (o *Orm) Destroy(model interface{}, query string) error {
+    var err error
 
-    err := destroyCB(modelId)
-    if err != nil {
-        return fmt.Errorf("cbes.Destroy() CouchBase %s", err.Error())
+    models := o.Find(model).Where(query).Limit(999999999).Do()
+    for _, m := range models {
+        _m := reflect.ValueOf(m)
+        id := _m.FieldByName("TYPE").String() + ":" + strconv.FormatInt(_m.FieldByName("ID").Int(), 10)
+
+        err = destroyCB(id)
+        if err != nil {
+            return fmt.Errorf("cbes.Destroy() CouchBase %s", err.Error())
+        }
+
+        err = destroyES(id, model)
+        if err != nil {
+            return fmt.Errorf("cbes.Destroy() ElastiSearch %s", err.Error())
+        }
     }
+
+
     return nil
 }
 

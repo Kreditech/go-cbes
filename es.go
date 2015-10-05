@@ -148,3 +148,21 @@ func updateES(id string, model interface{}) error {
 
     return nil
 }
+
+// delete document from ElasticSearch
+func destroyES(id string, model interface{}) error {
+    modelName := getModelName(model)
+    es := *connection.es
+    index := dbSettings.ElasticSearch.Index
+
+    _, err := es.Delete().
+    Index(index).
+    Type(modelName).
+    Id(id).Do()
+
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
