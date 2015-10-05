@@ -43,7 +43,7 @@ type functions interface  {
     Aggregate()  *Orm
     Limit()      *Orm
     Order()      *Orm
-    Skip()       *Orm
+    From()       *Orm
     Do()         interface{}
 }
 
@@ -124,6 +124,18 @@ func (o *Orm) Where(query string) *Orm {
     }
 
     tmpQuery["query"].(map[string]interface{})["filtered"].(map[string]interface{})["filter"] = q
+    return o
+}
+
+// Pagination of results.  The from parameter defines the offset from the first result you want to fetch
+// The Limit() function allows you to configure the maximum amount of hits to be returned. From() default is 0, and
+// Limit() default is 10
+func (o *Orm) From(from int) *Orm {
+    if len(tmpQuery) == 0 {
+        panic("You must declare Find() first!")
+    }
+
+    tmpQuery["from"] = from
     return o
 }
 
