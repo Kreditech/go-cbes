@@ -1,7 +1,7 @@
 package cbes
 
 import (
-    "gopkg.in/couchbaselabs/gocb.v0"
+    "gopkg.in/couchbase/gocb.v1"
     "gopkg.in/olivere/elastic.v2"
     "fmt"
 )

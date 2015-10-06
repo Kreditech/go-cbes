@@ -32,22 +32,6 @@ var queryTemplate = map[string]interface{}{
     "sort": []interface{}{},
 }
 
-type functions interface  {
-    Find()       *Orm
-    Where()      *Orm
-    Create()
-    CreateEach()
-    Update()
-    Destroy()
-    Reindex()
-    Aggregate()  *Orm
-    Limit()      *Orm
-    Order()      *Orm
-    From()       *Orm
-    Do()         interface{}
-}
-
-
 type Orm struct {
     db *db
 }
@@ -275,26 +259,22 @@ func (o *Orm) Update(model interface{}, query string) error {
     models := o.Find(model).Where(query).Limit(999999999).Order("ID", true).Do()
 
     for _, m := range models {
+        var _model reflect.Value
         _m            := reflect.ValueOf(m)
         modelType     := _m.FieldByName("TYPE").String()
         modelID       := _m.FieldByName("ID").Int()
         createdAt     := _m.FieldByName("CreatedAt").String()
         id            := modelType + ":" + strconv.FormatInt(modelID, 10)
         timeFormatted := time.Now().Format(time.RFC3339)
-        fmt.Println(reflect.TypeOf(reflect.ValueOf(model)))
+
         _modelType := reflect.TypeOf(model).Kind()
-        var _model reflect.Value
-        fmt.Println(_modelType)
         if _modelType == reflect.Struct {
             _model = reflect.ValueOf(model)
-            fmt.Println(reflect.TypeOf(_model))
         } else {
             _model = reflect.ValueOf(model).Elem()
-            fmt.Println(reflect.TypeOf(_model))
         }
 
-        modelClone    := reflect.New(_model.Type()).Elem()
-
+        modelClone := reflect.New(_model.Type()).Elem()
         for i := 0; i < _model.NumField(); i++ {
             field      := _model.Field(i)
             name       := _model.Type().Field(i).Name
@@ -371,6 +351,32 @@ func (o *Orm) Update(model interface{}, query string) error {
     }
 
     return nil
+}
+
+// Get collection for the specified model
+func (o *Orm) GetCollection(model interface{}) ([]interface{}, error) {
+    res := []interface{}{}
+    data, err := getByView(model)
+    if err != nil {
+        return res, err
+    }
+
+    for _, val := range data {
+        doc := val.(map[string]interface{})["value"].(map[string]interface{})["doc"]
+        res = append(res, doc)
+    }
+
+    return res, nil
+}
+
+// Get raw CouchBase collection view for the specified model
+func (o *Orm) GetRawCollection(model interface{}) ([]interface{}, error) {
+    data, err := getByView(model)
+    if err != nil {
+        return []interface{}{}, err
+    }
+
+    return data, nil
 }
 
 // Create a new ORM object with

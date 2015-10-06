@@ -1,7 +1,7 @@
 package cbes
 
 import (
-    "gopkg.in/couchbaselabs/gocb.v0"
+    "gopkg.in/couchbase/gocb.v1"
     "time"
     "fmt"
     "strconv"
@@ -54,20 +54,20 @@ func openCb(settings *Settings) (*gocb.Bucket, error) {
     return bucket, nil
 }
 
-// get the view from the model interface
-func getView (model interface{}) string {
+// Generate CouchBase view script for given model
+func generateModelViewScript (model interface{}) string {
     viewName := getModelName(model)
     return "function (doc, meta) {if(doc.TYPE && doc.TYPE == '" + viewName + "') {emit(meta.id, {doc: doc, meta: meta});}}"
 }
 
-// create and upsert the view in CouchBase
+// Create and upsert the view in CouchBase
 func createModelViewsCB(models map[string]interface{}) error {
     manager := *connection.cb.Manager(dbSettings.CouchBase.UserName, dbSettings.CouchBase.Pass)
     views := map[string]gocb.View{}
 
     for _, model := range models {
         newView := gocb.View{}
-        newView.Map = getView(model)
+        newView.Map = generateModelViewScript(model)
 
         views[getModelName(model)] = newView
     }
@@ -86,7 +86,7 @@ func createModelViewsCB(models map[string]interface{}) error {
     return nil
 }
 
-// insert on CouchBase and return the Id
+// Insert on CouchBase and return the Id
 func createCB(model interface{}) (int64, error) {
     var err error
     var count string
@@ -132,7 +132,7 @@ func createCB(model interface{}) (int64, error) {
     return id, err
 }
 
-// remove on CouchBase
+// Remove on CouchBase
 func destroyCB(modelId string) error {
     _, err := connection.cb.Remove(modelId, 0)
     if err != nil {
@@ -142,7 +142,7 @@ func destroyCB(modelId string) error {
     return nil
 }
 
-// update on CouchBase
+// Update on CouchBase
 func updateCB(modelId string, replaceModel interface{}) error {
     _, err := connection.cb.Replace(modelId, &replaceModel, 0, 0)
     if err != nil {
@@ -150,4 +150,25 @@ func updateCB(modelId string, replaceModel interface{}) error {
     }
 
     return nil
+}
+
+// Get all the data for a specific model
+func getByView(model interface{}) ([]interface{}, error) {
+    modelName := getModelName(model)
+    data := []interface{}{}
+    cb := *connection.cb
+
+    query := gocb.NewViewQuery(dbSettings.CouchBase.Bucket.Name, modelName)
+    rows, err := cb.ExecuteViewQuery(query)
+    if err != nil {
+        return data, err
+    }
+
+    var row interface{}
+    for rows.Next(&row) {
+        data = append(data, row)
+    }
+
+    rows.Close()
+    return data, nil
 }
