@@ -281,7 +281,18 @@ func (o *Orm) Update(model interface{}, query string) error {
         createdAt     := _m.FieldByName("CreatedAt").String()
         id            := modelType + ":" + strconv.FormatInt(modelID, 10)
         timeFormatted := time.Now().Format(time.RFC3339)
-        _model        := reflect.ValueOf(model).Elem()
+        fmt.Println(reflect.TypeOf(reflect.ValueOf(model)))
+        _modelType := reflect.TypeOf(model).Kind()
+        var _model reflect.Value
+        fmt.Println(_modelType)
+        if _modelType == reflect.Struct {
+            _model = reflect.ValueOf(model)
+            fmt.Println(reflect.TypeOf(_model))
+        } else {
+            _model = reflect.ValueOf(model).Elem()
+            fmt.Println(reflect.TypeOf(_model))
+        }
+
         modelClone    := reflect.New(_model.Type()).Elem()
 
         for i := 0; i < _model.NumField(); i++ {
