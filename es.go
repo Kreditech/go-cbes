@@ -71,7 +71,6 @@ func addMapping(mapping string, modelName string) error {
         return fmt.Errorf("expected get mapping response; got: %v", err.Error())
     }
 
-    fmt.Println(currentMapping)
     if len(currentMapping) > 0 {
         return nil
     }
@@ -90,6 +89,26 @@ func addMapping(mapping string, modelName string) error {
     }
     if !res.Acknowledged {
         return fmt.Errorf("expected put mapping ack; got: %v", res.Acknowledged)
+    }
+
+    return nil
+}
+
+// delete model mapping
+func deleteMapping(model interface{}) error {
+    var err error
+    index := dbSettings.ElasticSearch.Index
+    es := *connection.es
+    modelName := getModelName(model)
+
+    _, err = es.GetMapping().Index(index).Type(modelName).Do()
+    if err != nil {
+        return nil
+    }
+
+    _, err = es.DeleteMapping().Index(index).Type(modelName).Do()
+    if err != nil {
+        return err
     }
 
     return nil
@@ -162,6 +181,30 @@ func destroyES(id string, model interface{}) error {
 
     if err != nil {
         return err
+    }
+
+    return nil
+}
+
+// Insert the given models array to ElasticSearch
+// This method is used by orm.Reindex() method
+func importModelsToEs (models []interface{}) error {
+    for _, model := range models {
+        id := reflect.ValueOf(model).FieldByName("ID").Int()
+        modelName := getModelName(model)
+        es := *connection.es
+        index := dbSettings.ElasticSearch.Index
+        key := modelName + ":" + strconv.FormatInt(id, 10)
+
+        _, err := es.Index().
+            Index(index).
+            Type(modelName).
+            Id(key).
+            BodyJson(model).Do()
+
+        if err != nil {
+            return err
+        }
     }
 
     return nil

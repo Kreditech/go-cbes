@@ -363,7 +363,7 @@ func (o *Orm) GetCollection(model interface{}) ([]interface{}, error) {
 
     for _, val := range data {
         doc := val.(map[string]interface{})["value"].(map[string]interface{})["doc"]
-        res = append(res, doc)
+        res = append(res, setModel(model, doc))
     }
 
     return res, nil
@@ -377,6 +377,36 @@ func (o *Orm) GetRawCollection(model interface{}) ([]interface{}, error) {
     }
 
     return data, nil
+}
+
+// Delete all documents and mapping from ElasticSearch for the given model and import them back
+// from CouchBase. In the case of changing a mapping you should use this method so the new mapping
+// will be applied
+func (o *Orm) Reindex(model interface{}) error {
+    var err error
+
+    err = deleteMapping(model)
+    if err != nil {
+        return fmt.Errorf("cbes.Reindex() delete mapping %s", err.Error())
+    }
+
+    modelMapping := buildModelMapping(model)
+    err = addMapping(modelMapping, getModelName(model))
+    if err != nil {
+        return fmt.Errorf("cbes.Reindex() put mapping %s", err.Error())
+    }
+
+    collection, err := o.GetCollection(model)
+    if err != nil {
+        return fmt.Errorf("cbes.Reindex() GetCollection %s", err.Error())
+    }
+
+    err = importModelsToEs(collection)
+    if err != nil {
+        return fmt.Errorf("cbes.Reindex() importModelsToEs %s", err.Error())
+    }
+
+    return nil
 }
 
 // Create a new ORM object with
