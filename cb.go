@@ -6,17 +6,38 @@ import (
     "fmt"
     "strconv"
     "reflect"
+    "net/http"
+    "strings"
+    "encoding/json"
+    "bytes"
 )
 
-type Bucket struct {
-    Name             string
-    Pass             string
-    OperationTimeout int //seconds
+type ViewsOptions struct {
+    UpdateInterval          int `json:"updateInterval,omitempty"`
+    UpdateMinChanges        int `json:"updateMinChanges,omitempty"`
+    ReplicaUpdateMinChanges int `json:"replicaUpdateMinChanges,omitempty"`
 }
 
-// connect to CouchBase
+type View struct {
+    Map    string `json:"map,omitempty"`
+    Reduce string `json:"reduce,omitempty"`
+}
+
+type DesignDocument struct  {
+    Views        map[string]View `json:"views,omitempty"`
+    SpatialViews map[string]View `json:"spatial,omitempty"`
+    Options      *ViewsOptions   `json:"options,omitempty"`
+}
+
+type Bucket struct {
+    Name                    string
+    Pass                    string
+    OperationTimeout        int //seconds
+}
+
+// Connect to CouchBase
 func connectCb(settings *Settings) (*gocb.Cluster, error) {
-    cluster, err := gocb.Connect(settings.CouchBase.Host)
+    cluster, err := gocb.Connect("couchbase://" + settings.CouchBase.Host)
 
     if err != nil {
         return nil, err
@@ -25,7 +46,7 @@ func connectCb(settings *Settings) (*gocb.Cluster, error) {
     return cluster, err;
 }
 
-// open CouchBase bucket
+// Open CouchBase bucket
 func openBucket(settings *Settings, cluster *gocb.Cluster) (*gocb.Bucket, error) {
     bucket := settings.CouchBase.Bucket
 
@@ -39,7 +60,7 @@ func openBucket(settings *Settings, cluster *gocb.Cluster) (*gocb.Bucket, error)
     return b, err
 }
 
-// open CouchBase cluster and bucket
+// Open CouchBase cluster and bucket
 func openCb(settings *Settings) (*gocb.Bucket, error) {
     cluster, err := connectCb(settings)
     if err != nil {
@@ -62,27 +83,42 @@ func generateModelViewScript (model interface{}) string {
 
 // Create and upsert the view in CouchBase
 func createModelViewsCB(models map[string]interface{}) error {
-    manager := *connection.cb.Manager(dbSettings.CouchBase.UserName, dbSettings.CouchBase.Pass)
-    views := map[string]gocb.View{}
+    client := &http.Client{}
+    settings := dbSettings.CouchBase
+    hostData := strings.Split(settings.Host, ":")
+    views := map[string]View{}
+    url := fmt.Sprintf("http://%s:8092/%s/_design/%s", hostData[0], settings.Bucket.Name, settings.Bucket.Name)
 
     for _, model := range models {
-        newView := gocb.View{}
+        newView := View{}
         newView.Map = generateModelViewScript(model)
 
         views[getModelName(model)] = newView
     }
 
-    dDocument := gocb.DesignDocument{}
-    dDocument.Name = dbSettings.CouchBase.Bucket.Name
+    dDocument := DesignDocument{}
     dDocument.Views = views
+    dDocument.Options = settings.ViewsOptions
 
-    err := manager.UpsertDesignDocument(&dDocument)
+    data, err := json.Marshal(dDocument)
     if err != nil {
-        fmt.Println("InsertDesignDocument Error: ")
-        fmt.Println(err)
+        return nil
+    }
+
+    req, err := http.NewRequest("PUT", url, bytes.NewReader(data))
+    if err != nil {
         return err
     }
 
+    req.Header.Add("Content-Type", "application/json")
+    req.SetBasicAuth(settings.UserName, settings.Pass)
+
+    resp, err := client.Do(req)
+    if err != nil {
+        return err
+    }
+
+    defer resp.Body.Close()
     return nil
 }
 
@@ -158,7 +194,7 @@ func getByView(model interface{}) ([]interface{}, error) {
     data := []interface{}{}
     cb := *connection.cb
 
-    query := gocb.NewViewQuery(dbSettings.CouchBase.Bucket.Name, modelName)
+    query := gocb.NewViewQuery(dbSettings.CouchBase.Bucket.Name, modelName).Stale(gocb.Before)
     rows, err := cb.ExecuteViewQuery(query)
     if err != nil {
         return data, err

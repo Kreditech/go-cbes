@@ -7,7 +7,7 @@ import (
     "reflect"
 )
 
-// connect to elastic search and build the client
+// Connect to elastic search and build the client
 func connectEs (settings *Settings) (*elastic.Client, error) {
     client, err := elastic.NewClient(elastic.SetURL(settings.ElasticSearch.Urls...))
     if err != nil {
@@ -60,7 +60,7 @@ func openEs (settings *Settings) (*elastic.Client, error) {
     return client, nil
 }
 
-// put model mapping if it doesn't exist
+// Put model mapping if it doesn't exist
 func addMapping(mapping string, modelName string) error {
     var err error
     index := dbSettings.ElasticSearch.Index
@@ -94,7 +94,7 @@ func addMapping(mapping string, modelName string) error {
     return nil
 }
 
-// delete model mapping
+// Delete model mapping
 func deleteMapping(model interface{}) error {
     var err error
     index := dbSettings.ElasticSearch.Index
@@ -114,7 +114,7 @@ func deleteMapping(model interface{}) error {
     return nil
 }
 
-// create ElasticSearch document based on model
+// Create ElasticSearch document based on model
 func createEs(id int64, model interface{}) error {
     modelName := getModelName(model)
     es := *connection.es
@@ -136,7 +136,7 @@ func createEs(id int64, model interface{}) error {
     return nil
 }
 
-// search in ElasticSearch
+// Search in ElasticSearch
 func searchEs(query string) *elastic.SearchResult {
     es := *connection.es
     index := dbSettings.ElasticSearch.Index
@@ -168,7 +168,7 @@ func updateES(id string, model interface{}) error {
     return nil
 }
 
-// delete document from ElasticSearch
+// Delete document from ElasticSearch
 func destroyES(id string, model interface{}) error {
     modelName := getModelName(model)
     es := *connection.es

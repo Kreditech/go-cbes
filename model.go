@@ -24,7 +24,7 @@ type _models struct  {
 
 var modelsCache = &_models{cache: make(map[string]interface{})}
 
-// check and add a model to cache
+// Check and add a model to cache
 func (m *_models) add(name string, model interface{}) (added bool) {
     m.mux.Lock()
     defer m.mux.Unlock()
@@ -37,7 +37,7 @@ func (m *_models) add(name string, model interface{}) (added bool) {
     return
 }
 
-// get the model from cache
+// Get the model from cache
 func (m *_models) get(name string) (model interface{}, ok bool) {
     m.mux.RLock()
     defer m.mux.RUnlock()
@@ -46,7 +46,7 @@ func (m *_models) get(name string) (model interface{}, ok bool) {
     return
 }
 
-// register a model
+// Register a model
 func registerModel (model interface{}) error {
     name := getModelName(model)
 
@@ -58,7 +58,7 @@ func registerModel (model interface{}) error {
     return nil
 }
 
-// convert model tags into objects and prepare them for ElasticSearch mapping builder
+// Convert model tags into objects and prepare them for ElasticSearch mapping builder
 func convertModelTags(_tags []string) interface{} {
     data := make(map[string]interface{})
     reg, err := regexp.Compile("[^-A-Za-z0-9_:+{},' *-]+")
@@ -112,7 +112,7 @@ func convertModelTags(_tags []string) interface{} {
     return data
 }
 
-// get the view name from model interface
+// Get the view name from model interface
 func getModelName(model interface{}) (string){
     var name string
     _m := reflect.TypeOf(model)
@@ -125,7 +125,7 @@ func getModelName(model interface{}) (string){
     return strings.ToLower(name)
 }
 
-// build ElasticSearch mapping from model struct tags
+// Build ElasticSearch mapping from model struct tags
 func buildModelMapping(model interface{}) string {
     m := reflect.ValueOf(model).Elem()
     modelName := getModelName(model)
@@ -180,7 +180,7 @@ func buildModelMapping(model interface{}) string {
     return string(mappingJson)
 }
 
-// check the values of the given model and if they are not set, set the default values from model Tags
+// Check the values of the given model and if they are not set, set the default values from model Tags
 func setModelDefaults(model interface{}) interface{} {
     m := reflect.ValueOf(model).Elem()
 
@@ -223,7 +223,7 @@ func setModelDefaults(model interface{}) interface{} {
     return model
 }
 
-// import all models mapping and view into CouchBase and ElasticSearch
+// Import all models mapping and view into CouchBase and ElasticSearch
 func importAllModels() error {
     err := createModelViewsCB(modelsCache.cache)
     if err != nil {
@@ -250,7 +250,7 @@ func setModel(_model, responseModel interface{}) interface{} {
     for i := 0; i < m.NumField(); i++ {
         field := m.Type().Field(i).Name
 
-        if field == "Model" {
+        if field == "Model" || field == "ttl" {
             continue
         }
 

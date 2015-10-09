@@ -13,10 +13,11 @@ type Settings struct {
                       NumberOfReplicas int
                   }
     CouchBase     struct {
-                      Host     string
-                      Bucket   *Bucket
-                      UserName string
-                      Pass     string
+                      Host         string
+                      Bucket       *Bucket
+                      UserName     string
+                      Pass         string
+                      ViewsOptions *ViewsOptions
                   }
 }
 
