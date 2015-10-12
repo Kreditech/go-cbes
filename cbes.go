@@ -29,7 +29,7 @@ type cbesConnection struct {
 }
 
 // Register DataBase connection
-func RegisterDataBase(settings *Settings) {
+func RegisterDataBase(settings *Settings) error {
     var err error
 
     err = open(settings)
@@ -47,15 +47,21 @@ func RegisterDataBase(settings *Settings) {
 printError:
     if err != nil {
         ColorLog("[ERRO] CBES: %s\n", err)
+        return err
     }
+
+    return nil
 }
 
 // Register a model or array of models
-func RegisterModel(models ...interface{}) {
+func RegisterModel(models ...interface{}) error{
     for _, model := range models {
         err := registerModel(model)
         if err != nil {
             ColorLog("[ERRO] CBES: register mode failed %s\n", err)
+            return err
         }
     }
+
+    return nil
 }
