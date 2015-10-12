@@ -32,7 +32,46 @@ type TestModelTTL struct {
     FloatArray  []float64       `type:"float" analyzer:"keyword" index:"analyzed"`
     Interface   map[string]interface{} `type:"object" properties:"{'name':{'type':'object','enabled':false},'sid':{'type':'string','index':'not_analyzed'}}"`
     Nested      []interface{}   `type:"nested" properties:"{'first': {'type': 'string'}, 'last':{'type': 'string'}}"`
-    ttl         int64           `ttl:"60"` //ttl in seconds
+    ttl         int64           `ttl:"10"` //ttl in seconds
+}
+
+var testModel TestModel = TestModel{
+    Name: "Avy",
+    LastName: "Merlin",
+    Active: true,
+    Float: 10.11,
+    Int: 1122,
+    StringArray: []string{"arr1", "arr2", "arr3"},
+    IntArray: []int64{1, 3, 4},
+    FloatArray: []float64{12.12, 13.13, 0.55},
+    Interface: map[string]interface{}{
+        "name": map[string]interface{}{
+            "first_name": "Shay",
+            "last_name": "Banon",
+        },
+        "sid": "12345aaaa",
+    },
+    Nested: []interface{}{map[string]interface{}{"first": "test"}, map[string]interface{}{"last": "test"}},
+}
+
+var testModelTtl TestModelTTL = TestModelTTL{
+    Name: "ttl",
+    LastName: "Merlin",
+    Age: 23,
+    Active: false,
+    Float: 10.11,
+    Int: 1122,
+    StringArray: []string{"arr1", "arr2", "arr3"},
+    IntArray: []int64{1, 3, 4},
+    FloatArray: []float64{12.12, 13.13, 0.55},
+}
+
+func TestRegisterModel(t *testing.T) {
+    err := cbes.RegisterModel(new(TestModel), new(TestModelTTL))
+
+    if err != nil {
+        t.Fatal(err)
+    }
 }
 
 func TestRegisterDataBase(t *testing.T) {
@@ -61,13 +100,6 @@ func TestRegisterDataBase(t *testing.T) {
     settings.CouchBase.ViewsOptions = viewsOptions
 
     err := cbes.RegisterDataBase(settings)
-    if err != nil {
-        t.Fatal(err)
-    }
-}
-
-func TestRegisterModel(t *testing.T) {
-    err := cbes.RegisterModel(new(TestModel), new(TestModelTTL))
     if err != nil {
         t.Fatal(err)
     }
