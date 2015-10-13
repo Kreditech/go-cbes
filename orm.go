@@ -77,6 +77,9 @@ func (o *Orm) Do() []interface{} {
         data = append(data, setModel(tmpModel, item))
     }
 
+    // reset query
+    tmpQuery = make(map[string]interface{})
+
     return data
 }
 

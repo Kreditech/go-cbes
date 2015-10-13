@@ -205,6 +205,11 @@ func TestOrder(t *testing.T) {
     if m1.ID > m2.ID {
         t.Fatalf("Order results is wrong")
     }
+
+    res = o.Find(&testModel).Where(q).Order("ID", false).Do()
+    if len(res) < 2 {
+        t.Fatalf("No results found")
+    }
 }
 
 func TestLimit(t *testing.T) {
