@@ -88,6 +88,9 @@ func (o *Orm) Find(model interface{}) *Orm {
         tmpModel = _model
     }
 
+    // reset query
+    tmpQuery = make(map[string]interface{})
+
     // clone queryTemplate into tmpQuery
     _copy, err := json.Marshal(queryTemplate)
     if err != nil {

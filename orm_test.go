@@ -51,7 +51,7 @@ func TestCreateEach(t *testing.T) {
         t.Fatal(err)
     }
 
-    time.Sleep(2500)
+    time.Sleep(2500 * time.Millisecond)
 }
 
 func TestUpdate(t *testing.T) {
@@ -100,7 +100,7 @@ func TestUpdate(t *testing.T) {
         t.Fatal(err)
     }
 
-    time.Sleep(2500)
+    time.Sleep(2500 * time.Millisecond)
 }
 
 func TestFind(t *testing.T) {
@@ -122,6 +122,10 @@ func TestFind(t *testing.T) {
     res := o.Find(&testModel).Where(q).Do()
     if len(res) < 1 {
         t.Fatalf("No results found")
+    }
+
+    if len(res) != 10 {
+        t.Fatalf("Return wrong count")
     }
 
     m := res[0].(TestModel)
@@ -171,6 +175,35 @@ func TestDo(t *testing.T) {
     res := o.Find(&testModel).Where(q).Do()
     if reflect.TypeOf(res) != reflect.TypeOf([]interface{}{}) {
         t.Fatalf("Do() wrong type")
+    }
+}
+
+func TestOrder(t *testing.T) {
+    o := cbes.NewOrm()
+    q := `{
+        "query": {
+            "bool": {
+                "must": [
+                    {
+                        "term": {
+                            "Name": "` + testModel.Name + `"
+                        }
+                    }
+                ]
+            }
+        }
+    }`
+
+    res := o.Find(&testModel).Where(q).Order("ID", true).Do()
+    if len(res) < 2 {
+        t.Fatalf("No results found")
+    }
+
+    m1 := res[0].(TestModel)
+    m2 := res[1].(TestModel)
+
+    if m1.ID > m2.ID {
+        t.Fatalf("Order results is wrong")
     }
 }
 
@@ -253,5 +286,116 @@ func TestAggregate(t *testing.T) {
     res := o.Find(&testModel).Where(q).Aggregate(aggQuery).Do()
     if len(res) < 1 {
         t.Fatalf("Aggregate() Returns wrong")
+    }
+}
+
+func TestGetCollection (t *testing.T) {
+    o := cbes.NewOrm()
+    collection, err := o.GetCollection(&testModel)
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    if len(collection) < 1 {
+        t.Fatalf("No results found")
+    }
+
+    m := collection[0].(TestModel)
+    if reflect.TypeOf(&m) != reflect.TypeOf(new(TestModel)) {
+        t.Fatalf("Return type not matching")
+    }
+}
+
+func TestGetRawCollection (t *testing.T) {
+    o := cbes.NewOrm()
+    collection, err := o.GetRawCollection(&testModel)
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    if len(collection) < 1 {
+        t.Fatalf("No results found")
+    }
+
+    if reflect.TypeOf(collection) != reflect.TypeOf([]interface{}{}) {
+        t.Fatalf("GetRawCollection() wrong type")
+    }
+}
+
+func TestReindex(t *testing.T) {
+    o := cbes.NewOrm()
+
+    err := o.Reindex(&testModel)
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    time.Sleep(2500 * time.Millisecond)
+
+    q := `{
+        "query": {
+            "bool": {
+                "must": [
+                    {
+                        "term": {
+                            "Name": "` + testModel.Name + `"
+                        }
+                    }
+                ]
+            }
+        }
+    }`
+
+    res := o.Find(&testModel).Where(q).Do()
+    if len(res) < 1 {
+        t.Fatalf("No results found")
+    }
+
+    if len(res) != 10 {
+        t.Fatalf("Return wrong count")
+    }
+
+    m := res[0].(TestModel)
+    if reflect.TypeOf(&m) != reflect.TypeOf(new(TestModel)) {
+        t.Fatalf("Return type not matching")
+    }
+}
+
+func TestDestroy (t *testing.T) {
+    o := cbes.NewOrm()
+    q := `{
+        "query": {
+            "bool": {
+                "must": [
+                    {
+                        "term": {
+                            "Age": 300
+                        }
+                    }
+                ]
+            }
+        }
+    }`
+
+    err := o.Destroy(&testModel, q)
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    time.Sleep(2500 * time.Millisecond)
+    res := o.Find(&testModel).Where(q).Do()
+    if len(res) > 0 {
+        t.Fatalf("Objects not destroied")
+    }
+
+    err = o.Destroy(&testModel, "")
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    time.Sleep(2500 * time.Millisecond)
+    res = o.Find(&testModel).Where("").Do()
+    if len(res) > 0 {
+        t.Fatalf("Objects not destroied")
     }
 }

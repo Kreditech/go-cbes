@@ -32,7 +32,7 @@ type TestModelTTL struct {
     FloatArray  []float64       `type:"float" analyzer:"keyword" index:"analyzed"`
     Interface   map[string]interface{} `type:"object" properties:"{'name':{'type':'object','enabled':false},'sid':{'type':'string','index':'not_analyzed'}}"`
     Nested      []interface{}   `type:"nested" properties:"{'first': {'type': 'string'}, 'last':{'type': 'string'}}"`
-    ttl         int64           `ttl:"10"` //ttl in seconds
+    ttl         int64           `ttl:"25"` //ttl in seconds
 }
 
 var testModel TestModel = TestModel{
