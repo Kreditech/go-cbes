@@ -7,6 +7,13 @@ import (
     "reflect"
 )
 
+type indexSettings struct {
+    NumberOfShards   int      `json:"number_of_shards,omitempty"`
+    NumberOfReplicas int      `json:"number_of_replicas,omitempty"`
+    RefreshInterval  string   `json:"refresh_interval,omitempty"`
+    CheckOnStartup   bool     `json:"check_on_startup,omitempty"`
+}
+
 // Connect to elastic search and build the client
 func connectEs (settings *Settings) (*elastic.Client, error) {
     client, err := elastic.NewClient(elastic.SetURL(settings.ElasticSearch.Urls...))
@@ -33,7 +40,32 @@ func checkIndex(settings *Settings, client *elastic.Client) (bool, error) {
 
 // Create Index
 func createIndex(settings *Settings, client *elastic.Client) (bool, error) {
-    builder, err := client.CreateIndex(settings.ElasticSearch.Index).Do()
+    iSettings := indexSettings{
+        NumberOfReplicas:1,
+        NumberOfShards: 5,
+        RefreshInterval: "1s",
+        CheckOnStartup: false,
+    }
+    _settings := settings.ElasticSearch
+
+    if _settings.NumberOfReplicas > 0 {
+        iSettings.NumberOfReplicas = _settings.NumberOfReplicas
+    }
+
+    if _settings.NumberOfShards > 0 {
+        iSettings.NumberOfShards = _settings.NumberOfShards
+    }
+
+    if len(_settings.RefreshInterval) > 0 {
+        iSettings.RefreshInterval = _settings.RefreshInterval
+    }
+
+    if _settings.CheckOnStartup == true {
+        iSettings.CheckOnStartup = _settings.CheckOnStartup
+    }
+
+    options := map[string]interface{}{"settings": iSettings}
+    builder, err := client.CreateIndex(_settings.Index).BodyJson(options).Do()
     if err != nil {
         return false, err
     }

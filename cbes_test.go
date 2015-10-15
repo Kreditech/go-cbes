@@ -78,8 +78,10 @@ func TestRegisterDataBase(t *testing.T) {
     settings := new(cbes.Settings)
     settings.ElasticSearch.Urls = []string{"http://192.168.33.10:9200"}
     settings.ElasticSearch.Index = "testindex"
-    settings.ElasticSearch.NumberOfShards = 0
-    settings.ElasticSearch.NumberOfReplicas = 0
+    settings.ElasticSearch.NumberOfShards = 5
+    settings.ElasticSearch.NumberOfReplicas = 1
+    settings.ElasticSearch.RefreshInterval = "10ms"
+    settings.ElasticSearch.CheckOnStartup = true
 
     settings.CouchBase.Host = "192.168.33.10:8091"
     settings.CouchBase.UserName = "root"

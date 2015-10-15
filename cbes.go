@@ -11,6 +11,8 @@ type Settings struct {
                       Index            string
                       NumberOfShards   int
                       NumberOfReplicas int
+                      RefreshInterval  string
+                      CheckOnStartup   bool
                   }
     CouchBase     struct {
                       Host         string

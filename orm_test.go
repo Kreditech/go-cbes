@@ -51,7 +51,7 @@ func TestCreateEach(t *testing.T) {
         t.Fatal(err)
     }
 
-    time.Sleep(2500 * time.Millisecond)
+    time.Sleep(30 * time.Millisecond)
 }
 
 func TestUpdate(t *testing.T) {
@@ -335,7 +335,7 @@ func TestReindex(t *testing.T) {
         t.Fatal(err)
     }
 
-    time.Sleep(2500 * time.Millisecond)
+    time.Sleep(30 * time.Millisecond)
 
     q := `{
         "query": {
@@ -387,7 +387,7 @@ func TestDestroy (t *testing.T) {
         t.Fatal(err)
     }
 
-    time.Sleep(2500 * time.Millisecond)
+    time.Sleep(30 * time.Millisecond)
     res := o.Find(&testModel).Where(q).Do()
     if len(res) > 0 {
         t.Fatalf("Objects not destroied")
@@ -398,7 +398,7 @@ func TestDestroy (t *testing.T) {
         t.Fatal(err)
     }
 
-    time.Sleep(2500 * time.Millisecond)
+    time.Sleep(30 * time.Millisecond)
     res = o.Find(&testModel).Where("").Do()
     if len(res) > 0 {
         t.Fatalf("Objects not destroied")
