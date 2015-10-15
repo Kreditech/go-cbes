@@ -100,7 +100,7 @@ func TestUpdate(t *testing.T) {
         t.Fatal(err)
     }
 
-    time.Sleep(2500 * time.Millisecond)
+    time.Sleep(30 * time.Millisecond)
 }
 
 func TestFind(t *testing.T) {
