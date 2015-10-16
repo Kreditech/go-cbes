@@ -31,9 +31,9 @@ Please keep in mind that ElasticSearch is a Near Real-Time. In special cases you
 
 
 ##Model
-**All the numeric types must be 64 bit (int64, float64)!.**
-To define the mapping for ElasticSearch and the default value using the struct tags.
-**At the moment default value works only for simple types not of arrays or objects!.**
+**All the numeric types must be 64 bit (int64, float64)!**
+To define the mapping for ElasticSearch and the model default values, use the struct tags.
+**At the moment default value works only for simple types not of arrays or objects!**
 
 TTL - [expiration time](https://www.elastic.co/guide/en/elasticsearch/reference/1.4/mapping-ttl-field.html).
 
