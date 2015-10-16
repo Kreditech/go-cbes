@@ -5,6 +5,8 @@
 
 [![Status](https://img.shields.io/badge/status-beta-orange.svg)]() [![Travis](https://img.shields.io/travis/rust-lang/rust.svg)]() [![Coverage](https://img.shields.io/badge/coverage-74,8%-yellowgreen.svg)]() [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/jmoiron/sqlx/master/LICENSE)
 
+[more documentation on godoc.org](https://godoc.org/github.com/Kreditech/go-cbes)
+
 go-cbes is an very fast ORM library for Golang that is using CouchBase and ElasticSearch as database. It uses idiomatic Go to operate on databases, implementing struct to database mapping and acts as a lightweight Go ORM framework. This library was designed to be supported by [Beego](http://beego.me/) or used as standalone library as well to find a good balance between functionality and performance.
 
 Inspired from [sails-cbes](https://www.npmjs.com/package/sails-cbes), [Beego](http://beego.me/)
