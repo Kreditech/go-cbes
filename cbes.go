@@ -2,44 +2,68 @@ package cbes
 
 import (
     "gopkg.in/olivere/elastic.v2"
-    "os"
-)
-
-var (
-    DebugLog = NewLog(os.Stderr)
 )
 
 // cbes configuration
-type Setting struct {
+type Settings struct {
     ElasticSearch struct {
-                      Urls             string
-                      Bucket           string
+                      Urls             []string
+                      Index            string
                       NumberOfShards   int
                       NumberOfReplicas int
+                      RefreshInterval  string
+                      CheckOnStartup   bool
                   }
     CouchBase     struct {
-                      Host             string
-                      Port             int
+                      Host         string
+                      Bucket       *Bucket
+                      UserName     string
+                      Pass         string
+                      ViewsOptions *ViewsOptions
                   }
 }
+
+var dbSettings = &Settings{}
 
 // connections
 type cbesConnection struct {
     es elastic.Client
 }
 
-func RegisterDataBase(aliasName string, settings *Setting) {
-    err := Open(aliasName, settings)
+// Register DataBase connection
+func RegisterDataBase(settings *Settings) error {
+    var err error
 
+    err = open(settings)
     if err != nil {
-
+        goto printError
     }
+
+    dbSettings = settings
+
+    err = importAllModels()
+    if err != nil {
+        goto printError
+    }
+
+printError:
+    if err != nil {
+        ColorLog("[ERRO] CBES: %s\n", err)
+        return err
+    }
+
+    return nil
 }
 
-func Client(settings Setting) (Setting) {
-    return settings
-    //    cbesConn.es = es.Connect(esOptions)
+// Register a model or array of models
+func RegisterModel(models ...interface{}) error{
+    for _, model := range models {
+        err := registerModel(model)
+        if err != nil {
+            ColorLog("[ERRO] CBES: register mode failed %s\n", err)
+            return err
+        }
+    }
+
+    return nil
 }
-
-
-

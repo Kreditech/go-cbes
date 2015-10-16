@@ -1,81 +1,35 @@
 package cbes
 
 import (
+    "gopkg.in/couchbase/gocb.v1"
     "gopkg.in/olivere/elastic.v2"
-    "gopkg.in/couchbaselabs/gocb.v0"
-
-    "sync"
     "fmt"
 )
 
-var dbCache = &dataBaseCache{cache: make(map[string]*alias)}
+var connection = new(db)
 
-type DB struct {
-    es elastic.Client
-    cb gocb.Cluster
+type db struct {
+    es *elastic.Client
+    cb *gocb.Bucket
 }
 
-type alias struct {
-    Name       string
-    Connection *DB
-}
+// Opens DB connection
+func open(settings *Settings) error {
+    var err error
 
-type dataBaseCache struct {
-    mux   sync.RWMutex
-    cache map[string]*alias
-}
-
-// Add database connection
-func (ch *dataBaseCache) add(name string, connection *alias) (added bool) {
-    ch.mux.Lock()
-    defer ch.mux.Unlock()
-
-    if _, ok := ch.cache[name]; ok == false {
-        ch.cache[name] = connection
-        added = true
+    connection.es, err = openEs(settings)
+    if err != nil {
+        err = fmt.Errorf("register ElasticSearch %s", err.Error())
+        goto end
     }
 
-    return
-}
-
-func addAlias(aliasName string, db *DB) (*alias, error) {
-    al := new(alias)
-
-    al.Name = aliasName
-    al.Connection = db
-
-    if dbCache.add(aliasName, al) == false {
-        return nil, fmt.Errorf("DataBase alias name `%s` already registered, cannot reuse", aliasName)
+    connection.cb, err = openCb(settings)
+    if err != nil {
+        err = fmt.Errorf("register CouchBase %s", err.Error())
+        goto end
     }
 
-    return al, nil
-}
-
-// Opens an DB specified by its aliasName
-func Open(aliasName string, settings *Setting) error {
-    var (
-        err error
-//        db *DB
-    )
-
-//    db.cb, err = OpenCb(settings)
-//    if err != nil {
-//        err = fmt.Errorf("register cb `%s`, %s", aliasName, err.Error())
-//        goto end
-//    }
-
-//    db.es, err = OpenEs(settings)
-//    if err != nil {
-//        err = fmt.Errorf("register es `%s`, %s", aliasName, err.Error())
-//        goto end
-//    }
-//
-//    _, err = addAlias(aliasName, db)
-//    if err != nil {
-//        goto end
-//    }
-
-//end:
+end:
     return err
 }
 
