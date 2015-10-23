@@ -33,7 +33,10 @@ branches:
     - develop
 
 email:
-    - luigi@kreditech.com
-    - tiago.amorim@kreditech.com
-    - robert@kreditech.com
-    - laura.hreniucu@kreditech.com
+  - luigi@kreditech.com
+  - tiago.amorim@kreditech.com
+  - robert@kreditech.com
+  - laura.hreniucu@kreditech.com
+
+after_success:
+  - coveralls
