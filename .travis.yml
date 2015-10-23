@@ -1,0 +1,26 @@
+language: go
+
+go:
+  - 1.5
+  - tip
+
+env:
+  matrix:
+    - ES_VERSION=1.7.3
+
+before_script:
+  # ElasticSearch Server
+  - mkdir ${HOME}/elasticsearch
+  - wget http://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-${ES_VERSION}.tar.gz
+  - tar -xzf elasticsearch-${ES_VERSION}.tar.gz -C ${HOME}/elasticsearch
+  - ${HOME}/elasticsearch/elasticsearch-${ES_VERSION}/bin/elasticsearch >& /dev/null &
+  - sleep 15
+  # Couchbase Server
+  - sudo wget http://packages.couchbase.com/releases/3.0.3/couchbase-server-enterprise_3.0.3-debian7_amd64.deb
+  - sudo dpkg -i couchbase-server-enterprise_3.0.3-debian7_amd64.deb
+  - sudo service couchbase-server start
+  # Setup Bucket for test
+  # This is done explicitly in the tests now
+  # Left here for refrence
+  - /opt/couchbase/bin/couchbase-cli cluster-init -c 127.0.0.1:8091 --cluster-init-username=root --cluster-init-password=root123 --cluster-init-ramsize=256
+  - /opt/couchbase/bin/couchbase-cli bucket-create -c 127.0.0.1:8091 --bucket=test --bucket-type=couchbase --bucket-port=11211 --bucket-ramsize=124 --bucket-replica=0 -u root -p root123
