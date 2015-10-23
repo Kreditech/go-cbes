@@ -108,12 +108,6 @@ func TestRegisterDataBase(t *testing.T) {
 
     settings.CouchBase.ViewsOptions = viewsOptions
 
-    failSettings := new(cbes.Settings)
-    err = cbes.RegisterDataBase(failSettings)
-    if err == nil {
-        t.Fatal("RegisterDataBase() expected error")
-    }
-
     err = cbes.RegisterDataBase(settings)
     if err != nil {
         t.Fatal(err)
