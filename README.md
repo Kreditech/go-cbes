@@ -3,7 +3,7 @@
 
 &copy; 2015 [Kreditech](http://www.kreditech.com/) / [Luigi Ilie Aron](https://github.com/aronluigi), [Laura Hreniucu](https://github.com/laura-h), [Robert Savu](https://github.com/r-savu), [Tiago Amorim](https://github.com/tiagoamorim85) & contributors
 
-[![Doc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/Kreditech/go-cbes) [![Status](https://img.shields.io/badge/status-beta-orange.svg)]() [![Build Status](https://travis-ci.org/Kreditech/go-cbes.svg?branch=version%2F0.1.6)](https://travis-ci.org/Kreditech/go-cbes) [![Coverage Status](https://coveralls.io/repos/Kreditech/go-cbes/badge.svg?branch=master&service=github)](https://coveralls.io/github/Kreditech/go-cbes?branch=master) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/jmoiron/sqlx/master/LICENSE)
+[![Doc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/Kreditech/go-cbes) [![Status](https://img.shields.io/badge/status-beta-orange.svg)]() [![Build Status](https://travis-ci.org/Kreditech/go-cbes.svg?branch=master)](https://travis-ci.org/Kreditech/go-cbes) [![Coverage Status](https://coveralls.io/repos/Kreditech/go-cbes/badge.svg?branch=master&service=github)](https://coveralls.io/github/Kreditech/go-cbes?branch=master) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/jmoiron/sqlx/master/LICENSE)
 
 [more documentation on godoc.org](https://godoc.org/github.com/Kreditech/go-cbes)
 
