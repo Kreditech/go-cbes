@@ -67,20 +67,27 @@ var testModelTtl TestModelTTL = TestModelTTL{
 }
 
 func TestRegisterModel(t *testing.T) {
-    err := cbes.RegisterModel(new(TestModel), new(TestModelTTL))
+    var err error
 
+    err = cbes.RegisterModel(new(TestModel), new(TestModelTTL))
     if err != nil {
         t.Fatal(err)
+    }
+
+    err = cbes.RegisterModel(new(TestModel), new(TestModelTTL))
+    if err == nil {
+        t.Fatal("RegisterModel() expecting error")
     }
 }
 
 func TestRegisterDataBase(t *testing.T) {
+    var err error
     settings := new(cbes.Settings)
     settings.ElasticSearch.Urls = []string{"http://192.168.33.10:9200"}
     settings.ElasticSearch.Index = "testindex"
     settings.ElasticSearch.NumberOfShards = 5
     settings.ElasticSearch.NumberOfReplicas = 1
-    settings.ElasticSearch.RefreshInterval = "10ms"
+    settings.ElasticSearch.RefreshInterval = "1s"
     settings.ElasticSearch.CheckOnStartup = true
 
     settings.CouchBase.Host = "192.168.33.10:8091"
@@ -101,7 +108,13 @@ func TestRegisterDataBase(t *testing.T) {
 
     settings.CouchBase.ViewsOptions = viewsOptions
 
-    err := cbes.RegisterDataBase(settings)
+    failSettings := new(cbes.Settings)
+    err = cbes.RegisterDataBase(failSettings)
+    if err == nil {
+        t.Fatal("RegisterDataBase() expected error")
+    }
+
+    err = cbes.RegisterDataBase(settings)
     if err != nil {
         t.Fatal(err)
     }
