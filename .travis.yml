@@ -22,12 +22,14 @@ before_script:
   # Setup Bucket for test
   # This is done explicitly in the tests now
   # Left here for refrence
-  - /opt/couchbase/bin/couchbase-cli cluster-init -c 127.0.0.1:8091 --cluster-init-username=root --cluster-init-password=root123 --cluster-init-ramsize=256
+  - sleep 15
+  - /opt/couchbase/bin/couchbase-cli cluster-init -c 127.0.0.1:8091 --cluster-init-username=root --cluster-init-password=root123 --cluster-init-ramsize=1024
   - /opt/couchbase/bin/couchbase-cli bucket-create -c 127.0.0.1:8091 --bucket=test --bucket-type=couchbase --bucket-port=11211 --bucket-ramsize=124 --bucket-replica=0 -u root -p root123
 
 branches:
   only:
     - master
+    - develop
 
 email:
     - luigi@kreditech.com
