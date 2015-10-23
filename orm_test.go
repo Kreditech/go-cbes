@@ -3,7 +3,6 @@ import (
     "go-cbes"
     "testing"
     "reflect"
-    "time"
     "strconv"
 )
 
@@ -50,8 +49,6 @@ func TestCreateEach(t *testing.T) {
     if err != nil {
         t.Fatal(err)
     }
-
-    time.Sleep(30 * time.Millisecond)
 }
 
 func TestUpdate(t *testing.T) {
@@ -99,8 +96,6 @@ func TestUpdate(t *testing.T) {
     if err != nil {
         t.Fatal(err)
     }
-
-    time.Sleep(30 * time.Millisecond)
 }
 
 func TestFind(t *testing.T) {
@@ -134,7 +129,20 @@ func TestFind(t *testing.T) {
     }
 }
 
+func errorWhere(t *testing.T) {
+    defer func() {
+        if e := recover(); e == nil {
+            t.Fatal("Expecting error!")
+        }
+    }()
+
+    o := cbes.NewOrm()
+    _ = o.Where("").Find(&testModel)
+}
+
 func TestWhere(t *testing.T) {
+    errorWhere(t)
+
     o := cbes.NewOrm()
     q := `{
         "query": {
@@ -178,7 +186,20 @@ func TestDo(t *testing.T) {
     }
 }
 
+func errorOrder(t *testing.T) {
+    defer func() {
+        if e := recover(); e == nil {
+            t.Fatal("Expecting error!")
+        }
+    }()
+
+    o := cbes.NewOrm()
+    _ = o.Order("ID", true)
+}
+
 func TestOrder(t *testing.T) {
+    errorOrder(t)
+
     o := cbes.NewOrm()
     q := `{
         "query": {
@@ -212,7 +233,20 @@ func TestOrder(t *testing.T) {
     }
 }
 
+func errorLimit(t *testing.T) {
+    defer func() {
+        if e := recover(); e == nil {
+            t.Fatal("Expecting error!")
+        }
+    }()
+
+    o := cbes.NewOrm()
+    _ = o.Limit(1)
+}
+
 func TestLimit(t *testing.T) {
+    errorLimit(t)
+
     o := cbes.NewOrm()
     q := `{
         "query": {
@@ -234,7 +268,20 @@ func TestLimit(t *testing.T) {
     }
 }
 
+func errorFrom(t *testing.T) {
+    defer func() {
+        if e := recover(); e == nil {
+            t.Fatal("Expecting error!")
+        }
+    }()
+
+    o := cbes.NewOrm()
+    _ = o.From(1)
+}
+
 func TestFrom(t *testing.T) {
+    errorFrom(t)
+
     o := cbes.NewOrm()
     q := `{
         "query": {
@@ -256,7 +303,20 @@ func TestFrom(t *testing.T) {
     }
 }
 
+func errorAggregate(t *testing.T) {
+    defer func() {
+        if e := recover(); e == nil {
+            t.Fatal("Expecting error!")
+        }
+    }()
+
+    o := cbes.NewOrm()
+    _ = o.Aggregate("")
+}
+
 func TestAggregate(t *testing.T) {
+    errorAggregate(t)
+
     o := cbes.NewOrm()
     q := `{
         "query": {
@@ -335,8 +395,6 @@ func TestReindex(t *testing.T) {
         t.Fatal(err)
     }
 
-    time.Sleep(30 * time.Millisecond)
-
     q := `{
         "query": {
             "bool": {
@@ -387,7 +445,6 @@ func TestDestroy (t *testing.T) {
         t.Fatal(err)
     }
 
-    time.Sleep(30 * time.Millisecond)
     res := o.Find(&testModel).Where(q).Do()
     if len(res) > 0 {
         t.Fatalf("Objects not destroied")
@@ -398,7 +455,6 @@ func TestDestroy (t *testing.T) {
         t.Fatal(err)
     }
 
-    time.Sleep(30 * time.Millisecond)
     res = o.Find(&testModel).Where("").Do()
     if len(res) > 0 {
         t.Fatalf("Objects not destroied")

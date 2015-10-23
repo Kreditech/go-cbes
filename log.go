@@ -2,7 +2,6 @@ package cbes
 
 import (
     "fmt"
-    "log"
     "runtime"
     "strings"
     "time"
@@ -112,91 +111,4 @@ func getColorLevel(level string) string {
     default:
         return level
     }
-    return level
-}
-
-// askForConfirmation uses Scanln to parse user input. A user must type in "yes" or "no" and
-// then press enter. It has fuzzy matching, so "y", "Y", "yes", "YES", and "Yes" all count as
-// confirmations. If the input is not recognized, it will ask again. The function does not return
-// until it gets a valid response from the user. Typically, you should use fmt to print out a question
-// before calling askForConfirmation. E.g. fmt.Println("WARNING: Are you sure? (yes/no)")
-func askForConfirmation() bool {
-    var response string
-    _, err := fmt.Scanln(&response)
-    if err != nil {
-        log.Fatal(err)
-    }
-    okayResponses := []string{"y", "Y", "yes", "Yes", "YES"}
-    nokayResponses := []string{"n", "N", "no", "No", "NO"}
-    if containsString(okayResponses, response) {
-        return true
-    } else if containsString(nokayResponses, response) {
-        return false
-    } else {
-        fmt.Println("Please type yes or no and then press enter:")
-        return askForConfirmation()
-    }
-}
-
-func containsString(slice []string, element string) bool {
-    for _, elem := range slice {
-        if elem == element {
-            return true
-        }
-    }
-    return false
-}
-
-// snake string, XxYy to xx_yy
-func snakeString(s string) string {
-    data := make([]byte, 0, len(s)*2)
-    j := false
-    num := len(s)
-    for i := 0; i < num; i++ {
-        d := s[i]
-        if i > 0 && d >= 'A' && d <= 'Z' && j {
-            data = append(data, '_')
-        }
-        if d != '_' {
-            j = true
-        }
-        data = append(data, d)
-    }
-    return strings.ToLower(string(data[:len(data)]))
-}
-
-func camelString(s string) string {
-    data := make([]byte, 0, len(s))
-    j := false
-    k := false
-    num := len(s) - 1
-    for i := 0; i <= num; i++ {
-        d := s[i]
-        if k == false && d >= 'A' && d <= 'Z' {
-            k = true
-        }
-        if d >= 'a' && d <= 'z' && (j || k == false) {
-            d = d - 32
-            j = false
-            k = true
-        }
-        if k && d == '_' && num > i && s[i+1] >= 'a' && s[i+1] <= 'z' {
-            j = true
-            continue
-        }
-        data = append(data, d)
-    }
-    return string(data[:len(data)])
-}
-
-// The string flag list, implemented flag.Value interface
-type strFlags []string
-
-func (s *strFlags) String() string {
-    return fmt.Sprintf("%d", *s)
-}
-
-func (s *strFlags) Set(value string) error {
-    *s = append(*s, value)
-    return nil
 }

@@ -158,6 +158,7 @@ func createEs(id int64, model interface{}) error {
     _, err := es.Index().
         Index(index).
         Type(modelName).
+        Refresh(true).
         Id(key).
         BodyJson(model).Do()
 
@@ -190,6 +191,7 @@ func updateES(id string, model interface{}) error {
     _, err := es.Update().
         Index(index).
         Type(modelName).
+        Refresh(true).
         Id(id).
         Doc(model).Do()
 
@@ -209,6 +211,7 @@ func destroyES(id string, model interface{}) error {
     _, err := es.Delete().
     Index(index).
     Type(modelName).
+    Refresh(true).
     Id(id).Do()
 
     if err != nil {
@@ -231,6 +234,7 @@ func importModelsToEs (models []interface{}) error {
         _, err := es.Index().
             Index(index).
             Type(modelName).
+            Refresh(true).
             Id(key).
             BodyJson(model).Do()
 

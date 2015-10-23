@@ -3,7 +3,7 @@
 
 &copy; 2015 [Kreditech](http://www.kreditech.com/) / [Luigi Ilie Aron](https://github.com/aronluigi), [Laura Hreniucu](https://github.com/laura-h), [Robert Savu](https://github.com/r-savu), [Tiago Amorim](https://github.com/tiagoamorim85) & contributors
 
-[![Status](https://img.shields.io/badge/status-beta-orange.svg)]() [![Travis](https://img.shields.io/travis/rust-lang/rust.svg)]() [![Coverage](https://img.shields.io/badge/coverage-74,8%-yellowgreen.svg)]() [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/jmoiron/sqlx/master/LICENSE)
+[![Doc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/Kreditech/go-cbes) [![Status](https://img.shields.io/badge/status-beta-orange.svg)]() [![Build](https://img.shields.io/badge/build-successful-green.svg)]() [![Coverage Status](https://coveralls.io/repos/Kreditech/go-cbes/badge.svg?branch=master&service=github)](https://coveralls.io/github/Kreditech/go-cbes?branch=master) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/jmoiron/sqlx/master/LICENSE)
 
 [more documentation on godoc.org](https://godoc.org/github.com/Kreditech/go-cbes)
 
@@ -20,12 +20,6 @@ Inspired from [sails-cbes](https://www.npmjs.com/package/sails-cbes), [Beego](ht
 
 Before using go-cbes make sure that you have installed and configure CouchBase and ElasticSearch. For CouchBase you need to create your bucket manually, go-cbes will create automatically the ElasticSearch Index.
 
-
-----------
-
-
-##Important!
-Please keep in mind that ElasticSearch is a Near Real-Time. In special cases you will need to use time delays between create and find operations. 
 
 ----------
 
