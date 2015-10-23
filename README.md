@@ -7,7 +7,7 @@
 
 [more documentation on godoc.org](https://godoc.org/github.com/Kreditech/go-cbes)
 
-go-cbes is an very fast ORM library for Golang that is using CouchBase and ElasticSearch as database. It uses idiomatic Go to operate on databases, implementing struct to database mapping and acts as a lightweight Go ORM framework. This library was designed to be supported by [Beego](http://beego.me/) or used as standalone library as well to find a good balance between functionality and performance.
+go-cbes is a very fast ORM library for Golang that is using CouchBase and ElasticSearch as database. It uses idiomatic Go to operate on databases, implementing struct to database mapping and acts as a lightweight Go ORM framework. This library was designed to be supported by [Beego](http://beego.me/) or used as standalone library as well to find a good balance between functionality and performance.
 
 Inspired from [sails-cbes](https://www.npmjs.com/package/sails-cbes), [Beego](http://beego.me/)
 
@@ -299,7 +299,7 @@ if err != nil {
 }
 ```
 ##Reindex()
-Every time you edit/add/remove the model mapping you need to use the reindex() method. This method will remove the mapping for the specified model from ElasticSearch and generate an new one + it will reimport all entities for the specified model from CouchBase to ElasticSearch. 
+Every time you edit/add/remove the model mapping you need to use the reindex() method. This method will remove the mapping for the specified model from ElasticSearch and generate a new one + it will reimport all entities for the specified model from CouchBase to ElasticSearch. 
 ```
 o := cbes.NewOrm()
 
