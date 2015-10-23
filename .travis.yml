@@ -4,6 +4,8 @@ go:
   - 1.5
   - tip
 
+go_import_path: github.com/Kreditech/go-cbes
+
 env:
   matrix:
     - ES_VERSION=1.7.3
@@ -24,3 +26,13 @@ before_script:
   # Left here for refrence
   - /opt/couchbase/bin/couchbase-cli cluster-init -c 127.0.0.1:8091 --cluster-init-username=root --cluster-init-password=root123 --cluster-init-ramsize=256
   - /opt/couchbase/bin/couchbase-cli bucket-create -c 127.0.0.1:8091 --bucket=test --bucket-type=couchbase --bucket-port=11211 --bucket-ramsize=124 --bucket-replica=0 -u root -p root123
+
+branches:
+  only:
+    - master
+
+email:
+    - luigi@kreditech.com
+    - tiago.amorim@kreditech.com
+    - robert@kreditech.com
+    - laura.hreniucu@kreditech.com
