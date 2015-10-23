@@ -2,7 +2,7 @@ package cbes_test
 import (
     "testing"
     "fmt"
-    "go-cbes"
+    "github.com/Kreditech/go-cbes"
     "reflect"
 )
 

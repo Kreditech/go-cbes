@@ -4,8 +4,6 @@ go:
   - 1.5
   - tip
 
-go_import_path: github.com/Kreditech/go-cbes
-
 env:
   matrix:
     - ES_VERSION=1.7.3

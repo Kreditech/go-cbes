@@ -1,7 +1,7 @@
 package cbes_test
 import (
     "testing"
-    "go-cbes"
+    "github.com/Kreditech/go-cbes"
 )
 
 type TestModel struct {

@@ -1,6 +1,6 @@
 package cbes_test
 import (
-    "go-cbes"
+    "github.com/Kreditech/go-cbes"
     "testing"
     "reflect"
     "strconv"
