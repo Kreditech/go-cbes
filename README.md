@@ -3,11 +3,11 @@
 
 &copy; 2015 [Kreditech](http://www.kreditech.com/) / [Luigi Ilie Aron](https://github.com/aronluigi), [Laura Hreniucu](https://github.com/laura-h), [Robert Savu](https://github.com/r-savu), [Tiago Amorim](https://github.com/tiagoamorim85) & contributors
 
-[![Doc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/Kreditech/go-cbes) [![Status](https://img.shields.io/badge/status-beta-orange.svg)]() [![Build](https://img.shields.io/badge/build-successful-green.svg)]() [![Coverage Status](https://coveralls.io/repos/Kreditech/go-cbes/badge.svg?branch=master&service=github)](https://coveralls.io/github/Kreditech/go-cbes?branch=master) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/jmoiron/sqlx/master/LICENSE)
+[![Doc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/Kreditech/go-cbes) [![Status](https://img.shields.io/badge/status-beta-orange.svg)]() [![Build Status](https://travis-ci.org/Kreditech/go-cbes.svg?branch=master)](https://travis-ci.org/Kreditech/go-cbes) [![Coverage Status](https://coveralls.io/repos/Kreditech/go-cbes/badge.svg?branch=master&service=github)](https://coveralls.io/github/Kreditech/go-cbes?branch=master) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/jmoiron/sqlx/master/LICENSE)
 
 [more documentation on godoc.org](https://godoc.org/github.com/Kreditech/go-cbes)
 
-go-cbes is an very fast ORM library for Golang that is using CouchBase and ElasticSearch as database. It uses idiomatic Go to operate on databases, implementing struct to database mapping and acts as a lightweight Go ORM framework. This library was designed to be supported by [Beego](http://beego.me/) or used as standalone library as well to find a good balance between functionality and performance.
+go-cbes is a very fast ORM library for Golang that is using CouchBase and ElasticSearch as database. It uses idiomatic Go to operate on databases, implementing struct to database mapping and acts as a lightweight Go ORM framework. This library was designed to be supported by [Beego](http://beego.me/) or used as standalone library as well to find a good balance between functionality and performance.
 
 Inspired from [sails-cbes](https://www.npmjs.com/package/sails-cbes), [Beego](http://beego.me/)
 
@@ -299,7 +299,7 @@ if err != nil {
 }
 ```
 ##Reindex()
-Every time you edit/add/remove the model mapping you need to use the reindex() method. This method will remove the mapping for the specified model from ElasticSearch and generate an new one + it will reimport all entities for the specified model from CouchBase to ElasticSearch. 
+Every time you edit/add/remove the model mapping you need to use the reindex() method. This method will remove the mapping for the specified model from ElasticSearch and generate a new one + it will reimport all entities for the specified model from CouchBase to ElasticSearch. 
 ```
 o := cbes.NewOrm()
 
