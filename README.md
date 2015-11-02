@@ -1,4 +1,4 @@
-#go-cbes
+#go-cbes - Golang ORM for Couchbase & ElastiSearch
 <a href="https://www.kreditech.com/" target="_blank" title="Kreditech"><img src="https://www.kreditech.com/wp-content/themes/kreditech/img/logo.svg" width="340" height="50" alt="Kreditech"/></a>
 
 &copy; 2015 [Kreditech](http://www.kreditech.com/) / [Luigi Ilie Aron](https://github.com/aronluigi), [Laura Hreniucu](https://github.com/laura-h), [Robert Savu](https://github.com/r-savu), [Tiago Amorim](https://github.com/tiagoamorim85) & contributors
@@ -20,7 +20,11 @@ Inspired from [sails-cbes](https://www.npmjs.com/package/sails-cbes), [Beego](ht
 
 Before using go-cbes make sure that you have installed and configure CouchBase and ElasticSearch. For CouchBase you need to create your bucket manually, go-cbes will create automatically the ElasticSearch Index.
 
+----------
 
+##Install
+	go get github.com/Kreditech/go-cbes
+	
 ----------
 
 
@@ -147,6 +151,28 @@ if err != nil {
     t.Fatal(err)
 }
 ```
+##Count()
+```
+o := cbes.NewOrm()
+q := `{
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "term": {
+                        "Name": "` + testModel.Name + `"
+                    }
+                }
+            ]
+        }
+    }
+}`
+
+count := o.Find(&testModel).Where(q).Count()
+if count != 11 {
+    t.Fatalf("Wrong Count")
+}
+```
 ##Update()
 ```
 o := cbes.NewOrm()
@@ -185,9 +211,13 @@ qUpdate := `{
 }`
 
 m.Age = 300
-err := o.Update(m, qUpdate)
+affected, err := o.Update(m, qUpdate)
 if err != nil {
     t.Fatal(err)
+}
+
+if affected == 0 {
+    t.Fatalf("No models were updated!")
 }
 ```
 ##Destroy()
@@ -208,9 +238,13 @@ q := `{
     }
 }`
 
-err := o.Destroy(&testModel, q)
+affected, err := o.Destroy(&testModel, q)
 if err != nil {
     t.Fatal(err)
+}
+
+if affected == 0 {
+    t.Fatalf("Objects not destroyed")
 }
 ```
 ##Find(), Where(), Do() 
@@ -327,4 +361,3 @@ q := `{
 res := o.Find(&testModel).Where(q).Do()
 m := res[0].(TestModel)
 ```
-
