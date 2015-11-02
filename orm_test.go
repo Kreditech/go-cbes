@@ -51,6 +51,28 @@ func TestCreateEach(t *testing.T) {
     }
 }
 
+func TestCount(t *testing.T) {
+    o := cbes.NewOrm()
+    q := `{
+        "query": {
+            "bool": {
+                "must": [
+                    {
+                        "term": {
+                            "Name": "` + testModel.Name + `"
+                        }
+                    }
+                ]
+            }
+        }
+    }`
+
+    count := o.Find(&testModel).Where(q).Count()
+    if count != 11 {
+        t.Fatalf("Wrong Count")
+    }
+}
+
 func TestUpdate(t *testing.T) {
     o := cbes.NewOrm()
     q := `{
@@ -92,9 +114,13 @@ func TestUpdate(t *testing.T) {
     }`
 
     m.Age = 300
-    err := o.Update(m, qUpdate)
+    affected, err := o.Update(m, qUpdate)
     if err != nil {
         t.Fatal(err)
+    }
+
+    if affected == 0 {
+        t.Fatalf("No models were updated!")
     }
 }
 
@@ -440,23 +466,21 @@ func TestDestroy (t *testing.T) {
         }
     }`
 
-    err := o.Destroy(&testModel, q)
+    affected, err := o.Destroy(&testModel, q)
     if err != nil {
         t.Fatal(err)
     }
 
-    res := o.Find(&testModel).Where(q).Do()
-    if len(res) > 0 {
-        t.Fatalf("Objects not destroied")
+    if affected == 0 {
+        t.Fatalf("Objects not destroyed")
     }
 
-    err = o.Destroy(&testModel, "")
+    affected, err = o.Destroy(&testModel, "")
     if err != nil {
         t.Fatal(err)
     }
 
-    res = o.Find(&testModel).Where("").Do()
-    if len(res) > 0 {
-        t.Fatalf("Objects not destroied")
+    if affected == 0 {
+        t.Fatalf("Objects not destroyed")
     }
 }

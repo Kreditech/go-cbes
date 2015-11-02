@@ -83,6 +83,19 @@ func (o *Orm) Do() []interface{} {
     return data
 }
 
+// Execute builded query and return elastic search count
+func (o *Orm) Count() int64 {
+    tmpQuery["size"] = 1
+
+    jsonQuery, err := json.Marshal(tmpQuery)
+    if err != nil {
+        panic(err)
+    }
+
+    res := searchEs(string(jsonQuery))
+    return res.TotalHits()
+}
+
 // Set the model witch you want to find
 // If you don't set Limit Find ElasticSearch will use the default Limit (10)
 func (o *Orm) Find(model interface{}) *Orm {
@@ -235,8 +248,9 @@ func (o *Orm) CreateEach(models ...interface{}) error {
     return nil
 }
 
-// Destroy a document in CouchBase and ElasticSearch
-func (o *Orm) Destroy(model interface{}, query string) error {
+// Destroy a document in CouchBase and ElasticSearch.
+// Returns the number of affected documents.
+func (o *Orm) Destroy(model interface{}, query string) (int, error) {
     var err error
 
     models := o.Find(model).Where(query).Limit(999999999).Do()
@@ -246,21 +260,22 @@ func (o *Orm) Destroy(model interface{}, query string) error {
 
         err = destroyCB(id)
         if err != nil {
-            return fmt.Errorf("cbes.Destroy() CouchBase %s", err.Error())
+            return 0, fmt.Errorf("cbes.Destroy() CouchBase %s", err.Error())
         }
 
         err = destroyES(id, model)
         if err != nil {
-            return fmt.Errorf("cbes.Destroy() ElastiSearch %s", err.Error())
+            return 0, fmt.Errorf("cbes.Destroy() ElastiSearch %s", err.Error())
         }
     }
 
 
-    return nil
+    return len(models), nil
 }
 
-// Update a document in CouchBase and ElasticSearch
-func (o *Orm) Update(model interface{}, query string) error {
+// Update a document in CouchBase and ElasticSearch.
+// Returns the number of affected documents.
+func (o *Orm) Update(model interface{}, query string) (int, error) {
     var err error
     models := o.Find(model).Where(query).Limit(999999999).Order("ID", true).Do()
 
@@ -347,16 +362,16 @@ func (o *Orm) Update(model interface{}, query string) error {
         setModel := modelClone.Interface()
         err = updateCB(id, setModel)
         if err != nil {
-            return fmt.Errorf("cbes.Update() CouchBase %s", err.Error())
+            return 0, fmt.Errorf("cbes.Update() CouchBase %s", err.Error())
         }
 
         err = updateES(id, setModel)
         if err != nil {
-            return fmt.Errorf("cbes.Update() ElasticSearch %s", err.Error())
+            return 0, fmt.Errorf("cbes.Update() ElasticSearch %s", err.Error())
         }
     }
 
-    return nil
+    return len(models), nil
 }
 
 // Get collection for the specified model
