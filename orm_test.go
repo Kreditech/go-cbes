@@ -3,7 +3,6 @@ import (
     "github.com/Kreditech/go-cbes"
     "testing"
     "reflect"
-    "strconv"
 )
 
 func TestNewOrm(t *testing.T) {
@@ -94,18 +93,26 @@ func TestUpdate(t *testing.T) {
         t.Fatalf("No results found")
     }
 
-    m := res[0].(TestModel)
-    if reflect.TypeOf(&m) != reflect.TypeOf(new(TestModel)) {
-        t.Fatalf("Return type not matching")
+    for i := 0; i < len(res); i++ {
+        m := res[i].(TestModel)
+
+        newAge := i * 100
+        m.Age = int64(newAge)
+        m.StringArray = []string{}
+
+        err := o.Update(&m)
+        if err != nil {
+             t.Fatal(err)
+        }
     }
 
-    qUpdate := `{
+    q = `{
         "query": {
             "bool": {
                 "must": [
                     {
                         "term": {
-                            "ID": ` + strconv.FormatInt(testModel.ID, 10) + `
+                            "Age": 200
                         }
                     }
                 ]
@@ -113,14 +120,9 @@ func TestUpdate(t *testing.T) {
         }
     }`
 
-    m.Age = 300
-    affected, err := o.Update(m, qUpdate)
-    if err != nil {
-        t.Fatal(err)
-    }
-
-    if affected == 0 {
-        t.Fatalf("No models were updated!")
+    res = o.Find(&testModel).Where(q).Do()
+    if len(res) != 1 {
+        t.Fatalf("Wrong update count!")
     }
 }
 
