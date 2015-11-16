@@ -195,29 +195,17 @@ if len(res) < 1 {
     t.Fatalf("No results found")
 }
 
-m := res[0].(TestModel)
-qUpdate := `{
-    "query": {
-        "bool": {
-            "must": [
-                {
-                    "term": {
-                        "ID": ` + strconv.FormatInt(testModel.ID, 10) + `
-                    }
-                }
-            ]
-        }
+for i := 0; i < len(res); i++ {
+    m := res[i].(TestModel)
+
+    newAge := i * 100
+    m.Age = int64(newAge)
+    m.StringArray = []string{}
+
+    err := o.Update(&m)
+    if err != nil {
+         t.Fatal(err)
     }
-}`
-
-m.Age = 300
-affected, err := o.Update(m, qUpdate)
-if err != nil {
-    t.Fatal(err)
-}
-
-if affected == 0 {
-    t.Fatalf("No models were updated!")
 }
 ```
 ##Destroy()

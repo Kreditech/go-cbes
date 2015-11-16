@@ -274,104 +274,52 @@ func (o *Orm) Destroy(model interface{}, query string) (int, error) {
 }
 
 // Update a document in CouchBase and ElasticSearch.
-// Returns the number of affected documents.
-func (o *Orm) Update(model interface{}, query string) (int, error) {
+func (o *Orm) Update(model interface{}) error {
     var err error
-    models := o.Find(model).Where(query).Limit(999999999).Order("ID", true).Do()
 
-    for _, m := range models {
-        var _model reflect.Value
-        _m            := reflect.ValueOf(m)
-        modelType     := _m.FieldByName("TYPE").String()
-        modelID       := _m.FieldByName("ID").Int()
-        createdAt     := _m.FieldByName("CreatedAt").String()
-        id            := modelType + ":" + strconv.FormatInt(modelID, 10)
-        timeFormatted := time.Now().Format(time.RFC3339)
+    _model     := reflect.ValueOf(model).Elem()
+    modelID    := _model.FieldByName("ID").Int()
+    modelType  := _model.FieldByName("TYPE").String()
+    id         := modelType + ":" + strconv.FormatInt(modelID, 10)
+    updateTime := time.Now().Format(time.RFC3339)
 
-        _modelType := reflect.TypeOf(model).Kind()
-        if _modelType == reflect.Struct {
-            _model = reflect.ValueOf(model)
-        } else {
-            _model = reflect.ValueOf(model).Elem()
-        }
-
-        modelClone := reflect.New(_model.Type()).Elem()
-        for i := 0; i < _model.NumField(); i++ {
-            field      := _model.Field(i)
-            name       := _model.Type().Field(i).Name
-            _mField    := _m.FieldByName(name)
-            cloneField := modelClone.FieldByName(name)
-
-            switch field.Kind() {
-            case reflect.Int64:
-                var empty, val int64
-
-                if field.Int() != empty {
-                    val = field.Int()
-                } else {
-                    val = _mField.Int()
-                }
-
-                cloneField.SetInt(val)
-            case reflect.Float64:
-                var empty, val float64
-
-                if field.Float() != empty {
-                    val = field.Float()
-                } else {
-                    val = _mField.Float()
-                }
-
-                cloneField.SetFloat(val)
-            case reflect.String:
-                var empty, val string
-
-                if field.String() != empty {
-                    val = field.String()
-                } else {
-                    val = _mField.String()
-                }
-
-                cloneField.SetString(val)
-            case reflect.Bool:
-                var empty, val bool
-
-                if field.Bool() != empty {
-                    val = field.Bool()
-                } else {
-                    val = _mField.Bool()
-                }
-
-                cloneField.SetBool(val)
-            case reflect.Slice, reflect.Map:
-                val := reflect.ValueOf(field.Interface())
-
-                if val.Len() == 0 {
-                    val = reflect.ValueOf(_mField.Interface())
-                }
-
-                cloneField.Set(val)
+    query := `{
+        "query": {
+            "bool": {
+                "must": [
+                    {
+                        "term": {
+                            "_id": "` + id + `"
+                        }
+                    }
+                ]
             }
         }
+    }`
 
-        modelClone.FieldByName("UpdatedAt").SetString(timeFormatted)
-        modelClone.FieldByName("CreatedAt").SetString(createdAt)
-        modelClone.FieldByName("TYPE").SetString(modelType)
-        modelClone.FieldByName("ID").SetInt(modelID)
-
-        setModel := modelClone.Interface()
-        err = updateCB(id, setModel)
-        if err != nil {
-            return 0, fmt.Errorf("cbes.Update() CouchBase %s", err.Error())
-        }
-
-        err = updateES(id, setModel)
-        if err != nil {
-            return 0, fmt.Errorf("cbes.Update() ElasticSearch %s", err.Error())
-        }
+    models := o.Find(model).Where(query).Do()
+    if len(models) > 1 {
+        return fmt.Errorf("cbes.Update() CouchBase - found to many models with ID %s", id)
     }
 
-    return len(models), nil
+    if len(models) == 0 {
+        return fmt.Errorf("Can't find model with ID %s", id)
+    }
+
+    _model.FieldByName("UpdatedAt").SetString(updateTime)
+
+    setModel := _model.Interface()
+    err = updateCB(id, setModel)
+    if err != nil {
+        return fmt.Errorf("cbes.Update() CouchBase %s", err.Error())
+    }
+
+    err = updateES(id, setModel)
+    if err != nil {
+        return fmt.Errorf("cbes.Update() ElasticSearch %s", err.Error())
+    }
+
+    return nil
 }
 
 // Get collection for the specified model
