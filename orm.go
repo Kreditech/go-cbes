@@ -211,8 +211,8 @@ func (o *Orm) Aggregate(query string) *Orm {
     return o
 }
 
-// Create new document in CouchBase and Elasticsearch
-func (o *Orm) Create(m interface{}) error {
+// Create new document in CouchBase and Elasticsearch and return the created document.
+func (o *Orm) Create(m interface{}) (interface{}, error) {
     t             := time.Now()
     timeFormatted := t.Format(time.RFC3339)
     model         := setModelDefaults(m)
@@ -223,35 +223,41 @@ func (o *Orm) Create(m interface{}) error {
 
     id, err := createCB(model)
     if err != nil {
-        return fmt.Errorf("cbes.Create() CouchBase %s", err.Error())
+        return nil, fmt.Errorf("cbes.Create() CouchBase %s", err.Error())
     }
 
     err = createEs(id, model)
     if err != nil {
-        return fmt.Errorf("cbes.Create() ElasticSearch %s", err.Error())
+        return nil, fmt.Errorf("cbes.Create() ElasticSearch %s", err.Error())
     }
 
-    return nil
+    reflect.ValueOf(model).Elem().FieldByName("ID").SetInt(id)
+
+    return reflect.ValueOf(model).Elem().Interface(), nil
 }
 
-// Create a variadic of documents in CouchBase and ElasticSearch
-func (o *Orm) CreateEach(models ...interface{}) error {
-    var err error
+// Create a variadic of documents in CouchBase and ElasticSearch and return all successfully created documents
+// even if an error occurs.
+func (o *Orm) CreateEach(models ...interface{}) ([]interface{}, error) {
+    data := make([]interface{}, 0)
 
     for _, model := range models {
-        err = o.Create(model)
+        m, err := o.Create(model)
         if err != nil {
-            return fmt.Errorf("cbes.CreateEach() CouchBase %s", err.Error())
+            return data, fmt.Errorf("cbes.CreateEach() CouchBase %s", err.Error())
         }
+
+        data = append(data, m)
     }
 
-    return nil
+    return data, nil
 }
 
 // Destroy a document in CouchBase and ElasticSearch.
-// Returns the number of affected documents.
-func (o *Orm) Destroy(model interface{}, query string) (int, error) {
+// Returns all the deleted documents even if an error occurs.
+func (o *Orm) Destroy(model interface{}, query string) ([]interface{}, error) {
     var err error
+    res    := make([]interface{}, 0)
 
     models := o.Find(model).Where(query).Limit(999999999).Do()
     for _, m := range models {
@@ -260,17 +266,18 @@ func (o *Orm) Destroy(model interface{}, query string) (int, error) {
 
         err = destroyCB(id)
         if err != nil {
-            return 0, fmt.Errorf("cbes.Destroy() CouchBase %s", err.Error())
+            return res, fmt.Errorf("cbes.Destroy() CouchBase %s", err.Error())
         }
 
         err = destroyES(id, model)
         if err != nil {
-            return 0, fmt.Errorf("cbes.Destroy() ElastiSearch %s", err.Error())
+            return res, fmt.Errorf("cbes.Destroy() ElastiSearch %s", err.Error())
         }
+
+        res = append(res, m)
     }
 
-
-    return len(models), nil
+    return res, nil
 }
 
 // Update a document in CouchBase and ElasticSearch.

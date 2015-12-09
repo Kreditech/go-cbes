@@ -17,15 +17,19 @@ func TestCreate(t *testing.T) {
     var err error
     o := cbes.NewOrm()
 
-    err = o.Create(&testModel)
+    resModel, err := o.Create(&testModel)
     if err != nil {
         t.Fatal(err)
     }
 
-    err = o.Create(&testModelTtl)
+    _ = resModel.(TestModel)
+
+    resModel, err = o.Create(&testModelTtl)
     if err != nil {
         t.Fatal(err)
     }
+
+    _ = resModel.(TestModelTTL)
 }
 
 func TestCreateEach(t *testing.T) {
@@ -39,14 +43,22 @@ func TestCreateEach(t *testing.T) {
         modelsTtl = append(modelsTtl, &testModelTtl)
     }
 
-    err = o.CreateEach(models...)
+    createdModels, err := o.CreateEach(models...)
     if err != nil {
         t.Fatal(err)
     }
 
-    err = o.CreateEach(modelsTtl...)
+    for _, m := range createdModels {
+        _ = m.(TestModel)
+    }
+
+    createdModels, err = o.CreateEach(modelsTtl...)
     if err != nil {
         t.Fatal(err)
+    }
+
+    for _, m := range createdModels {
+        _ = m.(TestModelTTL)
     }
 }
 
@@ -473,8 +485,12 @@ func TestDestroy (t *testing.T) {
         t.Fatal(err)
     }
 
-    if affected == 0 {
+    if len(affected) == 0 {
         t.Fatalf("Objects not destroyed")
+    }
+
+    for _, deletedModel := range affected {
+        _ = deletedModel.(TestModel)
     }
 
     affected, err = o.Destroy(&testModel, "")
@@ -482,7 +498,11 @@ func TestDestroy (t *testing.T) {
         t.Fatal(err)
     }
 
-    if affected == 0 {
+    if len(affected) == 0 {
         t.Fatalf("Objects not destroyed")
+    }
+
+    for _, deletedModel := range affected {
+        _ = deletedModel.(TestModel)
     }
 }
