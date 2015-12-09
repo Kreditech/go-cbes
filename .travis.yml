@@ -11,7 +11,7 @@ env:
 before_install:
   - go get github.com/axw/gocov/gocov
   - go get github.com/mattn/goveralls
-  - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
+  - go get golang.org/x/tools/cmd/cover
 
 before_script:
   # ElasticSearch Server
@@ -36,7 +36,7 @@ before_script:
   - sleep 10
 
 script:
-  - $HOME/gopath/bin/goveralls -service=travis-c
+  - $HOME/gopath/bin/goveralls -repotoken $COVERALLS_TOKEN
 
 branches:
   only:
