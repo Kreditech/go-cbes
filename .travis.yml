@@ -5,13 +5,14 @@ go:
   - tip
 
 env:
+  - "PATH=/home/travis/gopath/bin:$PATH"
   matrix:
     - ES_VERSION=1.7.3
 
 before_install:
   - go get github.com/axw/gocov/gocov
   - go get github.com/mattn/goveralls
-  - go get golang.org/x/tools/cmd/cover
+  - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
 
 before_script:
   # ElasticSearch Server
@@ -36,7 +37,8 @@ before_script:
   - sleep 10
 
 script:
-  - $HOME/gopath/bin/goveralls -repotoken $COVERALLS_TOKEN
+  - go test -v -covermode=count -coverprofile=coverage.out ./...
+  - goveralls -coverprofile=coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
 
 branches:
   only:
