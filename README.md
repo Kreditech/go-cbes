@@ -23,8 +23,8 @@ Before using go-cbes make sure that you have installed and configure CouchBase a
 ----------
 
 ##Install
-	go get github.com/Kreditech/go-cbes
-	
+    go get github.com/Kreditech/go-cbes
+    
 ----------
 
 
@@ -224,7 +224,7 @@ for i := 0; i < len(res); i++ {
 ```
 ##Destroy()
 Delete by query.
-Returns all successfully created documents even if an error occurs.
+Returns all successfully deleted documents even if an error occurs.
 ```
 o := cbes.NewOrm()
 q := `{
