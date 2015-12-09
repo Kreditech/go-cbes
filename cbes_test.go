@@ -83,14 +83,14 @@ func TestRegisterModel(t *testing.T) {
 func TestRegisterDataBase(t *testing.T) {
     var err error
     settings := new(cbes.Settings)
-    settings.ElasticSearch.Urls = []string{"http://127.0.0.1:9200"}
+    settings.ElasticSearch.Urls = []string{"http://192.168.33.10:9200"}
     settings.ElasticSearch.Index = "testindex"
     settings.ElasticSearch.NumberOfShards = 5
     settings.ElasticSearch.NumberOfReplicas = 1
     settings.ElasticSearch.RefreshInterval = "1s"
     settings.ElasticSearch.CheckOnStartup = true
 
-    settings.CouchBase.Host = "127.0.0.1:8091"
+    settings.CouchBase.Host = "192.168.33.10:8091"
     settings.CouchBase.UserName = "root"
     settings.CouchBase.Pass = "root123"
 

@@ -8,6 +8,11 @@ env:
   matrix:
     - ES_VERSION=1.7.3
 
+before_install:
+  - go get github.com/axw/gocov/gocov
+  - go get github.com/mattn/goveralls
+  - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
+
 before_script:
   # ElasticSearch Server
   - mkdir ${HOME}/elasticsearch
@@ -30,6 +35,9 @@ before_script:
   - curl -XDELETE 'http://127.0.0.1:9200/testindex/'
   - sleep 10
 
+script:
+  - $(go env GOPATH | awk 'BEGIN{FS=":"} {print $1}')/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+
 branches:
   only:
     - master
@@ -40,6 +48,3 @@ email:
   - tiago.amorim@kreditech.com
   - robert@kreditech.com
   - laura.hreniucu@kreditech.com
-
-after_success:
-  - coveralls
