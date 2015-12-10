@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT-license.
 
 /*
-go-cbes - Golang ORM for Couchbase & ElastiSearch
+go-cbes - Golang ORM for Couchbase & ElasticSearch
 
 go-cbes is a very fast ORM library for Golang that is using CouchBase and ElasticSearch as database.
 It uses idiomatic Go to operate on databases, implementing struct to database mapping and acts as a lightweight
