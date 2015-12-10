@@ -8,38 +8,17 @@ import (
     "strconv"
 )
 
-var tmpModel interface{}
-var tmpQuery = make(map[string]interface{})
-var queryTemplate = map[string]interface{}{
-    "query": map[string]interface{}{
-        "filtered": map[string]interface{}{
-            "query": map[string]interface{}{
-                "bool": map[string]interface{}{
-                    "must": []interface{}{
-                        map[string]interface{}{
-                            "term": map[string]interface{}{
-                                "_type": map[string]string{
-                                    "value": "",
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-            "filter": make(map[string]interface{}),
-        },
-    },
-    "sort": []interface{}{},
-}
-
 type Orm struct {
     db *db
+    tmpModel      interface{}
+    tmpQuery      map[string]interface{}
+    queryTemplate map[string]interface{}
 }
 
 // Execute builded query. If Aggregate() method is used this method will
 // return the aggregations result from ElasticSearch
 func (o *Orm) Do() []interface{} {
-    jsonQuery, err := json.Marshal(tmpQuery)
+    jsonQuery, err := json.Marshal(o.tmpQuery)
     if err != nil {
         panic(err)
     }
@@ -74,20 +53,20 @@ func (o *Orm) Do() []interface{} {
             panic(err)
         }
 
-        data = append(data, setModel(tmpModel, item))
+        data = append(data, setModel(o.tmpModel, item))
     }
 
     // reset query
-    tmpQuery = make(map[string]interface{})
+    o.tmpQuery = make(map[string]interface{})
 
     return data
 }
 
 // Execute builded query and return elastic search count
 func (o *Orm) Count() int64 {
-    tmpQuery["size"] = 1
+    o.tmpQuery["size"] = 1
 
-    jsonQuery, err := json.Marshal(tmpQuery)
+    jsonQuery, err := json.Marshal(o.tmpQuery)
     if err != nil {
         panic(err)
     }
@@ -99,27 +78,29 @@ func (o *Orm) Count() int64 {
 // Set the model witch you want to find
 // If you don't set Limit Find ElasticSearch will use the default Limit (10)
 func (o *Orm) Find(model interface{}) *Orm {
+    // build a new orm object instance
+    newOrm   := NewOrm()
     typeName := getModelName(model)
     _model, ok := modelsCache.get(typeName); if ok {
-        tmpModel = _model
+        newOrm.tmpModel = _model
     }
 
     // reset query
-    tmpQuery = make(map[string]interface{})
+    newOrm.tmpQuery = make(map[string]interface{})
 
     // clone queryTemplate into tmpQuery
-    _copy, err := json.Marshal(queryTemplate)
+    _copy, err := json.Marshal(newOrm.queryTemplate)
     if err != nil {
         panic(err)
     }
 
-    err = json.Unmarshal(_copy, &tmpQuery)
+    err = json.Unmarshal(_copy, &newOrm.tmpQuery)
     if err != nil {
         panic(err)
     }
 
     // set tmpQuery model type
-    typeVal := tmpQuery["query"].(map[string]interface{})["filtered"]
+    typeVal := newOrm.tmpQuery["query"].(map[string]interface{})["filtered"]
     typeVal = typeVal.(map[string]interface{})["query"]
     typeVal = typeVal.(map[string]interface{})["bool"]
     typeVal = typeVal.(map[string]interface{})["must"].([]interface{})[0]
@@ -127,12 +108,12 @@ func (o *Orm) Find(model interface{}) *Orm {
     typeVal = typeVal.(map[string]interface{})["_type"]
     typeVal.(map[string]interface{})["value"] = typeName
 
-    return o
+    return newOrm
 }
 
 // Set query for ElasticSearch
 func (o *Orm) Where(query string) *Orm {
-    if len(tmpQuery) == 0 {
+    if len(o.tmpQuery) == 0 {
         panic("You must declare Find() first!")
     }
 
@@ -143,7 +124,7 @@ func (o *Orm) Where(query string) *Orm {
         return o
     }
 
-    tmpQuery["query"].(map[string]interface{})["filtered"].(map[string]interface{})["filter"] = q
+    o.tmpQuery["query"].(map[string]interface{})["filtered"].(map[string]interface{})["filter"] = q
     return o
 }
 
@@ -151,27 +132,27 @@ func (o *Orm) Where(query string) *Orm {
 // The Limit() function allows you to configure the maximum amount of hits to be returned. From() default is 0, and
 // Limit() default is 10
 func (o *Orm) From(from int) *Orm {
-    if len(tmpQuery) == 0 {
+    if len(o.tmpQuery) == 0 {
         panic("You must declare Find() first!")
     }
 
-    tmpQuery["from"] = from
+    o.tmpQuery["from"] = from
     return o
 }
 
 // Set limit to Find() query in ElasticSearch. Max limit = 999999999
 func (o *Orm) Limit(limit int) *Orm {
-    if len(tmpQuery) == 0 {
+    if len(o.tmpQuery) == 0 {
         panic("You must declare Find() first!")
     }
 
-    tmpQuery["size"] = limit
+    o.tmpQuery["size"] = limit
     return o
 }
 
 // Set ElasticSearch sort. direction: true = 'asc', false = 'desc'
 func (o *Orm) Order(field string, direction bool) *Orm {
-    if len(tmpQuery) == 0 {
+    if len(o.tmpQuery) == 0 {
         panic("You must declare Find() first!")
     }
 
@@ -186,16 +167,16 @@ func (o *Orm) Order(field string, direction bool) *Orm {
         },
     }
 
-    typeVal := tmpQuery["sort"].([]interface{})
+    typeVal := o.tmpQuery["sort"].([]interface{})
     typeVal = append(typeVal, sort)
 
-    tmpQuery["sort"] = typeVal
+    o.tmpQuery["sort"] = typeVal
     return o
 }
 
 // Aggregate data using ElasticSearch
 func (o *Orm) Aggregate(query string) *Orm {
-    if len(tmpQuery) == 0 {
+    if len(o.tmpQuery) == 0 {
         panic("You must declare Find() first!")
     }
 
@@ -206,7 +187,7 @@ func (o *Orm) Aggregate(query string) *Orm {
         return o
     }
 
-    tmpQuery["aggs"] = q
+    o.tmpQuery["aggs"] = q
 
     return o
 }
@@ -387,5 +368,28 @@ func (o *Orm) Reindex(model interface{}) error {
 
 // Create a new ORM object with
 func NewOrm() *Orm {
-    return new(Orm)
+    return &Orm{
+        tmpQuery: make(map[string]interface{}),
+        queryTemplate: map[string]interface{}{
+            "query": map[string]interface{}{
+                "filtered": map[string]interface{}{
+                    "query": map[string]interface{}{
+                        "bool": map[string]interface{}{
+                            "must": []interface{}{
+                                map[string]interface{}{
+                                    "term": map[string]interface{}{
+                                        "_type": map[string]string{
+                                            "value": "",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "filter": make(map[string]interface{}),
+                },
+            },
+            "sort": []interface{}{},
+        },
+    }
 }
