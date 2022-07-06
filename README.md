@@ -1,4 +1,4 @@
-#go-cbes - Golang ORM for Couchbase & ElasticSearch
+# go-cbes - Golang ORM for Couchbase & ElasticSearch
 <a href="https://www.kreditech.com/" target="_blank" title="Kreditech"><img src="https://www.kreditech.com/wp-content/themes/kreditech/img/logo.svg" width="340" height="50" alt="Kreditech"/></a>
 
 &copy; 2015 [Kreditech](http://www.kreditech.com/) / [Luigi Ilie Aron](https://github.com/aronluigi), [Laura Hreniucu](https://github.com/laura-h), [Robert Savu](https://github.com/r-savu), [Tiago Amorim](https://github.com/tiagoamorim85) & contributors
@@ -14,7 +14,7 @@ Inspired from [sails-cbes](https://www.npmjs.com/package/sails-cbes), [Beego](ht
 
 ----------
 
-##Requirements
+## Requirements
  - ElasticSearch
  - Couchbase
 
@@ -22,13 +22,13 @@ Before using go-cbes make sure that you have installed and configure CouchBase a
 
 ----------
 
-##Install
+## Install
     go get github.com/Kreditech/go-cbes
     
 ----------
 
 
-##Model
+## Model
 **All the numeric types must be 64 bit (int64, float64)!**
 To define the mapping for ElasticSearch and the model default values, use the struct tags.
 **At the moment default value works only for simple types not of arrays or objects!**
@@ -67,7 +67,7 @@ type TestModelTTL struct {
     ttl         int64           `ttl:"25"` //ttl in seconds
 }
 ```
-##RegisterModel
+## RegisterModel
 Before register the db we need to register our models.
 ```
 err := cbes.RegisterModel(new(TestModel), new(TestModelTTL))
@@ -76,7 +76,7 @@ if err != nil {
     t.Fatal(err)
 }
 ```
-##RegisterDataBase
+## RegisterDataBase
 After we register our models we can register our db
 ```
 settings := new(cbes.Settings)
@@ -110,11 +110,11 @@ if err != nil {
     t.Fatal(err)
 }
 ```
-##Build connection
+## Build connection
 ```
     o := cbes.NewOrm()
 ```
-##Create()
+## Create()
 Returns the created document.
 ```
 var err error
@@ -134,7 +134,7 @@ if err != nil {
 
 _ = resModel.(TestModelTTL)
 ```
-##CreateEach()
+## CreateEach()
 Returns all successfully created documents even if an error occurs.
 ```
 var err error
@@ -165,7 +165,7 @@ for _, m := range createdModels {
     _ = m.(TestModelTTL)
 }
 ```
-##Count()
+## Count()
 ```
 o := cbes.NewOrm()
 q := `{
@@ -187,7 +187,7 @@ if count != 11 {
     t.Fatalf("Wrong Count")
 }
 ```
-##Update()
+## Update()
 ```
 o := cbes.NewOrm()
 q := `{
@@ -222,7 +222,7 @@ for i := 0; i < len(res); i++ {
     }
 }
 ```
-##Destroy()
+## Destroy()
 Delete by query.
 Returns all successfully deleted documents even if an error occurs.
 ```
@@ -267,7 +267,7 @@ for _, deletedModel := range affected {
     _ = deletedModel.(TestModel)
 }
 ```
-##Find(), Where(), Do() 
+## Find(), Where(), Do() 
 ```
 o := cbes.NewOrm()
 q := `{
@@ -287,19 +287,19 @@ q := `{
 res := o.Find(&testModel).Where(q).Do()
 m := res[0].(TestModel)
 ```
-##Order()
+## Order()
 ```
 res := o.Find(&testModel).Where(q).Order("ID", true).Do()
 ```
-##Limit()
+## Limit()
 ```
 res := o.Find(&testModel).Where(q).Limit(1).Do()
 ```
-##From()
+## From()
 ```
 res := o.Find(&testModel).Where(q).Limit(2).From(3).Do()
 ```
-##Aggregate()
+## Aggregate()
 ```
 o := cbes.NewOrm()
 q := `{
@@ -334,7 +334,7 @@ aggQuery := `{
 
 res := o.Find(&testModel).Where(q).Aggregate(aggQuery).Do()
 ```
-##GetCollection()
+## GetCollection()
 We recommend you to use this method every time you want to get all models of one type. This method is using CouchBase views in order to return huge amounts of data very fast.
 ```
 o := cbes.NewOrm()
@@ -344,7 +344,7 @@ if err != nil {
 }
 m := collection[0].(TestModel)
 ```
-##GetRawCollection()
+## GetRawCollection()
 ```
 o := cbes.NewOrm()
 collection, err := o.GetRawCollection(&testModel)
@@ -352,7 +352,7 @@ if err != nil {
     t.Fatal(err)
 }
 ```
-##Reindex()
+## Reindex()
 Every time you edit/add/remove the model mapping you need to use the reindex() method. This method will remove the mapping for the specified model from ElasticSearch and generate a new one + it will reimport all entities for the specified model from CouchBase to ElasticSearch. 
 ```
 o := cbes.NewOrm()
